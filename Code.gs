@@ -64,3 +64,8 @@ function validateConfiguration_() {
 function showPublishingGuide_() {
   SpreadsheetApp.getUi().alert('Публикация', 'Откройте Расширения → Apps Script → Развернуть → Новое развёртывание → Веб-приложение. Выполнять от вашего имени; доступ выберите под свою аудиторию. Скопируйте адрес, заканчивающийся на /exec. После изменения кода обновите версию развёртывания. Данные таблицы обновляются без новой версии.', SpreadsheetApp.getUi().ButtonSet.OK);
 }
+
+/** Editor entry point; initialization checks for a spreadsheet UI context. */
+function setupForm() {
+  initializeSpreadsheet_();
+}

@@ -220,3 +220,11 @@ test('visibility of required follow-up uses canonical numeric answers, preventin
  assert.throws(()=>domain.validateSubmission(form,payload({score:'5'})));
  assert.equal(domain.validateSubmission(form,payload({score:'5',followup:'details'})).answers.followup,'details');
 });
+
+test('map coordinates must be finite numbers within geographic bounds',()=>{
+ const form=schema([question('location','map',{required:true})]);
+ const point=domain.validateSubmission(form,payload({location:{lat:55.75,lng:37.61,unexpected:'ignored'}})).answers.location;
+ assert.deepEqual(normalize(point),{lat:55.75,lng:37.61});
+ for(const value of ['',{},'55,37',{lat:'55',lng:37},{lat:NaN,lng:0},{lat:0,lng:Infinity},{lat:-91,lng:0},{lat:0,lng:181}])assert.throws(()=>domain.validateSubmission(form,payload({location:value})));
+ assert.equal(domain.validateSubmission(form,payload({location:{lat:0,lng:0}})).answers.location.lat,0);
+});

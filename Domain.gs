@@ -1,8 +1,8 @@
 /** Pure schema and submission rules, also exercised locally with Node. */
 var OprosDomain = (function () {
   'use strict';
-  var TYPES = ['text', 'paragraph', 'email', 'number', 'date', 'select', 'multiselect', 'radio', 'checkbox', 'scale'];
-  var CHOICES = ['select', 'multiselect', 'radio'];
+  var TYPES = ['text', 'paragraph', 'email', 'number', 'date', 'select', 'multiselect', 'radio', 'checkbox', 'scale', 'person', 'map'];
+  var CHOICES = ['select', 'multiselect', 'radio', 'person'];
   var OPS = ['equals', 'not_equals', 'includes', 'empty', 'not_empty'];
   function fail(message) { throw new Error(message); }
   function string(value) { return value == null ? '' : String(value); }
@@ -164,6 +164,9 @@ var OprosDomain = (function () {
       var v = q.validation || {};
       if (q.type === 'checkbox') {
         if (typeof value !== 'boolean') fail('Ожидается отметка: ' + q.title);
+      } else if (q.type === 'map') {
+        if (!object(value) || typeof value.lat !== 'number' || typeof value.lng !== 'number' || !isFinite(value.lat) || !isFinite(value.lng) || Math.abs(value.lat) > 90 || Math.abs(value.lng) > 180) fail('Выберите корректную точку на карте: ' + q.title);
+        value = { lat: value.lat, lng: value.lng };
       } else if (q.type === 'number' || q.type === 'scale') {
         if ((typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && !value.trim())) fail('Ожидается число: ' + q.title);
         value = Number(value);
@@ -181,7 +184,7 @@ var OprosDomain = (function () {
         if (q.type === 'date') {
           if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || !isFinite(Date.parse(value)) || new Date(value).toISOString().slice(0, 10) !== value) fail('Некорректная дата: ' + q.title);
         }
-        if (q.type === 'select' || q.type === 'radio') {
+        if (q.type === 'select' || q.type === 'radio' || q.type === 'person') {
           if (!q.options.some(function (o) { return o.value === value; })) fail('Выберите вариант из списка: ' + q.title);
         }
         if ((v.minLength != null && value.length < v.minLength) || (v.maxLength != null && value.length > v.maxLength)) fail('Недопустимая длина ответа: ' + q.title);

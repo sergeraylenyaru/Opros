@@ -5,12 +5,13 @@ var OprosStore = (function () {
     Settings: ['key', 'value', 'description'],
     Sections: ['id', 'title', 'description', 'position', 'enabled'],
     Questions: ['id', 'section_id', 'title', 'description', 'type', 'required', 'options_source', 'options_json', 'visible_if_json', 'validation_json', 'position', 'enabled'],
+    People: ['ФИО'],
     Lists: ['list_id', 'value', 'label', 'position', 'enabled'],
     Responses: ['submission_id', 'submitted_at', 'respondent_email']
   };
   function workbook() {
     var id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
-    if (!id) throw new Error('Владелец должен запустить initializeSpreadsheet_ из редактора Apps Script.');
+    if (!id) throw new Error('Владелец должен запустить setupForm из редактора Apps Script.');
     return SpreadsheetApp.openById(id);
   }
   function readRows(book, name) {
@@ -27,7 +28,31 @@ var OprosStore = (function () {
     });
   }
   function schema(book) {
-    return OprosDomain.buildSchema(readRows(book, 'Settings'), readRows(book, 'Sections'), readRows(book, 'Questions'), readRows(book, 'Lists'));
+    var settings = readRows(book, 'Settings');
+    var result = OprosDomain.buildSchema(settings, readRows(book, 'Sections'), readRows(book, 'Questions'), readRows(book, 'Lists'));
+    if (result.sections.some(function (s) { return s.questions.some(function (q) { return q.id === 'respondent_fio'; }); })) throw new Error('ID respondent_fio зарезервирован для обязательного ФИО.');
+    var range = settings.filter(function (r) { return r.key === 'fio_range'; })[0];
+    result.sections[0].questions.unshift({ id: 'respondent_fio', title: 'ФИО', description: 'Выберите себя в списке. Для поиска введите часть ФИО.', type: 'person', required: true, options: people(book, range ? range.value : 'People!A2:A'), visibleIf: null, validation: {} });
+    return result;
+  }
+  function people(book, reference) {
+    var match = /^('?)(.+?)\1!([A-Za-z]+)([1-9][0-9]*):([A-Za-z]+)([1-9][0-9]*)?$/.exec(String(reference).trim());
+    if (!match || match[3].toUpperCase() !== match[5].toUpperCase()) throw new Error('fio_range: укажите один столбец, например People!A2:A или Сотрудники!B2:B500.');
+    var sheet = book.getSheetByName(match[2].replace(/''/g, "'"));
+    if (!sheet) {
+      if (String(reference) === 'People!A2:A') return [];
+      throw new Error('Не найден лист ФИО: ' + match[2]);
+    }
+    var first = Number(match[4]), last = Math.min(match[6] ? Number(match[6]) : sheet.getLastRow(), sheet.getLastRow());
+    if (last < first) return [];
+    if (last - first + 1 > 10000) throw new Error('Диапазон ФИО не должен превышать 10000 строк.');
+    var column = match[3].toUpperCase().split('').reduce(function (n, c) { return n * 26 + c.charCodeAt(0) - 64; }, 0);
+    var seen = Object.create(null);
+    return sheet.getRange(first, column, last - first + 1, 1).getDisplayValues().map(function (row) { return String(row[0]).trim(); }).filter(function (name) {
+      if (!name || seen[name]) return false;
+      if (name.length > 500) throw new Error('ФИО длиннее 500 символов.');
+      seen[name] = true; return true;
+    }).map(function (name) { return { value: name, label: name }; });
   }
   function safeCell(value) {
     // Force user-controlled formula-like strings to remain text in Google Sheets.
@@ -48,6 +73,7 @@ var OprosStore = (function () {
         { key: 'email_required', value: false, description: 'Требовать заполнение почты; адрес указывает сам участник' },
         { key: 'submit_label', value: 'Отправить ответ', description: 'Текст кнопки' },
         { key: 'closed_message', value: 'Приём ответов завершён. Спасибо за интерес!', description: 'Сообщение закрытой формы' },
+        { key: 'fio_range', value: 'People!A2:A', description: 'Диапазон ФИО на отдельном листе (один столбец)' },
         { key: 'max_responses', value: 0, description: 'Максимум ответов, 0 — без ограничения' }
       ],
       Sections: [
@@ -55,7 +81,6 @@ var OprosStore = (function () {
         { id: 'details', title: 'Ваши предпочтения', description: 'Помогите нам подготовить подходящее предложение', position: 2, enabled: true }
       ],
       Questions: [
-        { id: 'name', section_id: 'about', title: 'Как вас зовут?', type: 'text', required: true, validation_json: '{"minLength":2,"maxLength":100}', position: 1, enabled: true },
         { id: 'city', section_id: 'about', title: 'Ваш город', type: 'select', required: true, options_source: 'list:cities', position: 2, enabled: true },
         { id: 'role', section_id: 'about', title: 'Как вы планируете использовать инструмент?', type: 'radio', required: true, options_json: '[{"value":"personal","label":"Для себя"},{"value":"team","label":"Для команды"}]', position: 3, enabled: true },
         { id: 'team_size', section_id: 'about', title: 'Сколько человек в команде?', type: 'number', required: true, visible_if_json: '{"question":"role","operator":"equals","value":"team"}', validation_json: '{"min":2,"max":10000}', position: 4, enabled: true },
@@ -73,6 +98,7 @@ var OprosStore = (function () {
         { list_id: 'features', value: 'validation', label: 'Проверка ответов', position: 3, enabled: true },
         { list_id: 'features', value: 'sections', label: 'Разделы и шаги', position: 4, enabled: true }
       ],
+      People: [],
       Responses: []
     };
     Object.keys(HEADERS).forEach(function (name) {
@@ -86,7 +112,15 @@ var OprosStore = (function () {
         sheet.autoResizeColumns(1, headers.length);
       }
     });
-    // Existing nonempty sheets are never reseeded or overwritten.
+    // Add the new setting without changing existing settings or responses.
+    if (!readRows(book, 'Settings').some(function (r) { return r.key === 'fio_range'; })) {
+      var settingsSheet = book.getSheetByName('Settings');
+      var settingHeaders = settingsSheet.getRange(1, 1, 1, settingsSheet.getLastColumn()).getValues()[0];
+      var settingRow = { key: 'fio_range', value: 'People!A2:A', description: 'Диапазон ФИО на отдельном листе' };
+      ensureCapacity(settingsSheet, settingsSheet.getLastRow() + 1, settingHeaders.length);
+      settingsSheet.getRange(settingsSheet.getLastRow() + 1, 1, 1, settingHeaders.length).setValues([settingHeaders.map(function (key) { return settingRow[key] || ''; })]);
+    }
+    // Existing question rows and responses are never reseeded or overwritten.
     schema(book);
     return book;
   }
@@ -118,7 +152,7 @@ var OprosStore = (function () {
       if (key === 'respondent_email') return safeCell(submission.respondentEmail);
       var id = key.indexOf('q:') === 0 ? key.slice(2) : '';
       var value = Object.prototype.hasOwnProperty.call(submission.answers, id) ? submission.answers[id] : '';
-      return safeCell(Array.isArray(value) ? JSON.stringify(value) : value);
+      return safeCell(value !== null && typeof value === 'object' ? JSON.stringify(value) : value);
     });
     sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
     SpreadsheetApp.flush();
