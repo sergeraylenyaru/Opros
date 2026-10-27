@@ -31,7 +31,8 @@ var OprosStore = (function () {
     return schemaFromRows(book, readRows(book, 'Settings'), readRows(book, 'Sections'), readRows(book, 'Questions'), readRows(book, 'Lists'));
   }
   function schemaFromRows(book, settings, sections, questions, lists) {
-    var result = OprosDomain.buildSchema(settings, sections, questions, lists);
+    var resolved = questions.map(function(row){var copy=Object.assign({},row);if(copy.enabled!==false&&!/^(false|0|no)$/i.test(String(copy.enabled))&&String(copy.options_source||'').indexOf('sheet:')===0){copy.options_json=JSON.stringify(externalOptions(JSON.parse(copy.options_source.slice(6))));copy.options_source='';}return copy;});
+    var result = OprosDomain.buildSchema(settings, sections, resolved, lists);
     if (result.sections.some(function (s) { return s.questions.some(function (q) { return q.id === 'respondent_fio'; }); })) throw new Error('ID respondent_fio зарезервирован для обязательного ФИО.');
     var range = settings.filter(function (r) { return r.key === 'fio_range'; })[0];
     result.sections[0].questions.unshift({ id: 'respondent_fio', title: 'ФИО', description: 'Выберите себя в списке. Для поиска введите часть ФИО.', type: 'person', required: true, options: people(book, range ? range.value : 'People!A2:A'), visibleIf: null, validation: {} });
@@ -55,6 +56,18 @@ var OprosStore = (function () {
       if (name.length > 500) throw new Error('ФИО длиннее 500 символов.');
       seen[name] = true; return true;
     }).map(function (name) { return { value: name, label: name }; });
+  }
+  function externalOptions(source) {
+    if (!source || typeof source!=='object') throw new Error('Укажите файл, лист и столбец справочника.');
+    var file=String(source.fileId||'').trim(),url=/\/spreadsheets\/d\/([A-Za-z0-9_-]+)/.exec(file);if(url)file=url[1];
+    if(!/^[A-Za-z0-9_-]{10,200}$/.test(file)||!String(source.sheet||'').trim()||!/^[A-Za-z]{1,3}$/.test(String(source.column||'')))throw new Error('Неверный файл, лист или столбец справочника.');
+    var start=Number(source.startRow||2);if(!Number.isInteger(start)||start<1)throw new Error('Начальная строка должна быть целой от 1.');
+    var book;try{book=SpreadsheetApp.openById(file);}catch(error){throw new Error('Нет доступа к файлу справочника. Предоставьте доступ владельцу приложения.');}
+    var sheet=book.getSheetByName(String(source.sheet).trim());if(!sheet)throw new Error('Не найден лист справочника: '+source.sheet);
+    var last=sheet.getLastRow();if(last<start)return [];if(last-start+1>10000)throw new Error('Справочник должен содержать не более 10000 строк.');
+    var column=String(source.column).toUpperCase().split('').reduce(function(n,c){return n*26+c.charCodeAt(0)-64;},0),seen=Object.create(null),result=[];
+    sheet.getRange(start,column,last-start+1,1).getDisplayValues().forEach(function(row){var value=String(row[0]).trim();if(!value||seen[value])return;if(value.length>500)throw new Error('Слишком длинное значение справочника.');seen[value]=true;result.push({value:value,label:value});});
+    if(result.length>1000)throw new Error('Не более 1000 уникальных вариантов на вопрос.');return result;
   }
   function safeCell(value) {
     // Force user-controlled formula-like strings to remain text in Google Sheets.
@@ -159,5 +172,5 @@ var OprosStore = (function () {
     sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
     SpreadsheetApp.flush();
   }
-  return { readRows: readRows, schemaFromRows: schemaFromRows, workbook: workbook, schema: schema, initialize: initialize, responses: responses, findSubmission: findSubmission, append: append, safeCell: safeCell };
+  return { externalOptions: externalOptions, readRows: readRows, schemaFromRows: schemaFromRows, workbook: workbook, schema: schema, initialize: initialize, responses: responses, findSubmission: findSubmission, append: append, safeCell: safeCell };
 })();

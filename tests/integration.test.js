@@ -5,7 +5,7 @@ function payload(id='submission_1234567890'){return {submissionId:id,respondentE
 function setting(r,key,value){const row=r.sheets.Settings.data.find(row=>row[0]===key);row[1]=value;}
 test('initialize, load, submit, deduplicate, and preserve configured data on reinitialization',()=>{
  const r=runtime(), c=r.context;c.initializeSpreadsheet_();
- assert.equal(Object.keys(r.sheets).length,6);
+ assert.equal(Object.keys(r.sheets).length,7);
  const schema=c.getFormSchema();assert.equal(schema.sections.length,2);assert.equal(schema.formId.length,24);assert.ok(!JSON.stringify(schema).includes(r.book.getId()));
  assert.equal(c.submitResponse(payload()).ok,true);assert.equal(r.sheets.Responses.getLastRow(),2);
  const headers=r.sheets.Responses.data[0], row=r.sheets.Responses.data[1];

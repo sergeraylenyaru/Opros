@@ -22,10 +22,10 @@ class Sheet {
 }
 function runtime() {
   const sheets={}, properties={}, cache=new Map(), alerts=[];let locked=false;
-  const book={getId:()=> 'local-fixture-sheet',getSheetByName:name=>sheets[name]||null,insertSheet(name){return sheets[name]=new Sheet();}};
+  const book={getId:()=> 'local-fixture-sheet',getSheetByName:name=>sheets[name]||null,insertSheet(name){return sheets[name]=new Sheet();},deleteSheet(sheet){for(const name of Object.keys(sheets))if(sheets[name]===sheet)delete sheets[name];}};
   const ui={ButtonSet:{OK:'OK',YES_NO:'YES_NO'},Button:{YES:'YES',NO:'NO'},alert(...args){alerts.push(args);return 'YES';}};
   const context=vm.createContext({console,CacheService:{getScriptCache:()=>({get:key=>{const entry=cache.get(key);return entry&&entry.expiresAt>Date.now()?entry.value:null;},put:(key,value,seconds)=>cache.set(key,{value,expiresAt:Date.now()+seconds*1000}),remove:key=>cache.delete(key)})},SpreadsheetApp:{openById:id=>{if(id!==book.getId())throw Error('wrong ID');return book;},getActiveSpreadsheet:()=>book,getUi:()=>ui,flush(){}},PropertiesService:{getScriptProperties:()=>({getProperty:k=>properties[k],setProperty:(k,v)=>{properties[k]=v;}})},LockService:{getScriptLock:()=>({tryLock(){if(locked)return false;locked=true;return true;},releaseLock(){locked=false;}})},Utilities:{getUuid:()=>crypto.randomUUID(),DigestAlgorithm:{SHA_256:'sha256'},computeDigest:(algorithm,value)=>Array.from(crypto.createHash(algorithm).update(value).digest())}});
-  for(const file of ['Domain.gs','SheetStore.gs','Code.gs','Admin.gs'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context,{filename:file});
+  for(const file of ['Domain.gs','SheetStore.gs','Code.gs','Admin.gs','Forms.gs'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),context,{filename:file});
   book.insertSheet('People').data=[['ФИО'],['Иванов Иван Иванович'],['Петров Пётр Петрович']];
   return {context,book,sheets,properties,cache,alerts,get locked(){return locked;}};
 }

@@ -38,7 +38,7 @@ var OprosAdmin = (function () {
     if (typeof token === 'string' && /^[a-f0-9-]{72}$/.test(token)) CacheService.getScriptCache().remove('admin:session:' + hash(token));
     return { ok: true };
   }
-  function load(token) { requireSession(token); return snapshot(OprosStore.workbook()); }
+  function load(token, formId) { requireSession(token); return formId && formId !== 'default' ? OprosForms.load(OprosStore.workbook(),formId) : snapshot(OprosStore.workbook()); }
   var fields = {
     settings: ['key', 'value', 'description'],
     sections: ['id', 'title', 'description', 'position', 'enabled'],
@@ -71,7 +71,9 @@ var OprosAdmin = (function () {
     if (!payload || typeof payload !== 'object' || JSON.stringify(payload).length > 500000) throw new Error('Настройки слишком большие или повреждены.');
     return withLock(function () {
       requireSession(token);
-      var book = OprosStore.workbook(), current = snapshot(book);
+      var book = OprosStore.workbook();
+      if (payload.formId && payload.formId !== 'default') return OprosForms.save(book,payload);
+      var current = snapshot(book);
       if (current.revision !== payload.revision) throw new Error('Настройки уже изменены в таблице или другом окне. Обновите редактор перед сохранением.');
       var jobs = Object.keys(fields).map(function (key) { return prepare(book, key, payload[key]); });
       // Validate all edits, including hidden/disabled rows becoming enabled, before writing any sheet.
@@ -93,12 +95,12 @@ var OprosAdmin = (function () {
       return snapshot(book);
     });
   }
-  return { hash: hash, login: login, logout: logout, load: load, save: save };
+  return { requireSession: requireSession, hash: hash, login: login, logout: logout, load: load, save: save };
 })();
 
 function adminLogin(password) { return OprosAdmin.login(password); }
 function adminLogout(token) { return OprosAdmin.logout(token); }
-function adminGetConfig(token) { return OprosAdmin.load(token); }
+function adminGetConfig(token, formId) { return OprosAdmin.load(token, formId); }
 function adminSaveConfig(token, payload) { return OprosAdmin.save(token, payload); }
 
 /** Run manually in the bound spreadsheet editor; web-app calls have no spreadsheet UI. */

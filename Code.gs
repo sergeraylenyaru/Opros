@@ -1,30 +1,34 @@
 /** Public web endpoints. Admin handlers end in '_' and cannot be called by HTML clients. */
 function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+  var template = HtmlService.createTemplateFromFile('Index');
+  template.initialFormId = OprosForms.id(arguments[0] && arguments[0].parameter && arguments[0].parameter.form);
+  template.appUrl = ScriptApp.getService().getUrl() || '';
+  return template.evaluate()
     .setTitle('Анкета · Opros')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
-function getFormSchema() {
+function getFormSchema(formId) {
   var book = OprosStore.workbook();
-  var schema = OprosStore.schema(book);
-  var sheet = OprosStore.responses(book);
+  var schema = OprosForms.schema(book, formId);
+  var sheet = OprosStore.responses(OprosForms.responseBook(book, formId));
   if (schema.maxResponses && sheet.getLastRow() - 1 >= schema.maxResponses) schema.acceptResponses = false;
   // A stable non-reversible namespace keeps drafts from different tables separate.
-  schema.formId = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, book.getId())
+  schema.formId = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, book.getId() + ":" + OprosForms.id(formId))
     .map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join('').slice(0, 24);
   delete schema.maxResponses;
   return schema;
 }
 
 function submitResponse(payload) {
+  var formId = OprosForms.id(payload && payload.formId);
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) throw new Error('Сервис занят. Повторите отправку через несколько секунд.');
   try {
     var book = OprosStore.workbook();
-    var schema = OprosStore.schema(book);
+    var schema = OprosForms.schema(book, formId);
     var result = OprosDomain.validateSubmission(schema, payload);
-    var sheet = OprosStore.responses(book);
+    var sheet = OprosStore.responses(OprosForms.responseBook(book, formId));
     // A network retry must succeed even if the first write filled the response limit.
     if (OprosStore.findSubmission(sheet, result.submissionId)) {
       return { ok: true, submissionId: result.submissionId, message: schema.confirmationMessage };
@@ -50,6 +54,7 @@ function initializeSpreadsheet_() {
   if (!lock.tryLock(20000)) throw new Error('Настройка уже выполняется. Повторите позже.');
   try {
     OprosStore.initialize(book);
+    OprosForms.registry(book);
     PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', book.getId());
   } finally { lock.releaseLock(); }
   SpreadsheetApp.getUi().alert('Готово', 'Созданы листы настроек, вопросов, списков и ответов. Существующие данные сохранены. Следующий шаг — развернуть веб-приложение.', SpreadsheetApp.getUi().ButtonSet.OK);
