@@ -135,8 +135,8 @@ var OprosStore = (function () {
       ensureCapacity(settingsSheet, settingsSheet.getLastRow() + 1, settingHeaders.length);
       settingsSheet.getRange(settingsSheet.getLastRow() + 1, 1, 1, settingHeaders.length).setValues([settingHeaders.map(function (key) { return settingRow[key] || ''; })]);
     }
-    // Existing question rows and responses are never reseeded or overwritten.
-    schema(book);
+    // Bootstrap prepares storage only. Broken user-authored conditions must not
+    // prevent binding the workbook and opening the authenticated repair editor.
     return book;
   }
   function responses(book) {

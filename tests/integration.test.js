@@ -53,3 +53,11 @@ test('map point persisted as JSON and rejected before writing when malformed',()
 test('upgrade adds fio_range to existing settings without overwriting customized rows',()=>{
  const r=runtime(),c=r.context;c.setupForm();const data=r.sheets.Settings.data;data.splice(data.findIndex(row=>row[0]==='fio_range'),1);setting(r,'form_title','Мой опрос');c.setupForm();assert.equal(c.getFormSchema().title,'Мой опрос');assert.equal(data.filter(row=>row[0]==='fio_range').length,1);
 });
+test('bootstrap binds workbook even if existing question conditions are broken and preserves rows',()=>{
+ const r=runtime(),c=r.context;c.setupForm();const headers=r.sheets.Questions.data[0],role=r.sheets.Questions.data.find(row=>row[0]==='role');role[headers.indexOf('enabled')]=false;delete r.properties.SPREADSHEET_ID;const before=JSON.stringify(r.sheets.Questions.data);
+ c.setupForm();assert.equal(r.properties.SPREADSHEET_ID,r.book.getId());assert.equal(JSON.stringify(r.sheets.Questions.data),before);assert.throws(()=>c.getFormSchema(),/предыдущий вопрос/);
+ c.setupAdmin();const password=r.alerts.at(-1)[1].split('\n')[0],token=c.adminLogin(password).token;assert.equal(c.adminGetConfig(token).questions.length,7);assert.equal(c.adminCreateForm(token,'Исправная форма').formId.startsWith('f_'),true);
+});
+test('startApp prepares an empty workbook and admin once without rotating existing credentials',()=>{
+ const r=runtime(),c=r.context;c.startApp();assert.equal(r.properties.SPREADSHEET_ID,r.book.getId());assert.ok(r.properties.ADMIN_PASSWORD_HASH);const hash=r.properties.ADMIN_PASSWORD_HASH;c.startApp();assert.equal(r.properties.ADMIN_PASSWORD_HASH,hash);
+});

@@ -104,7 +104,7 @@ function adminGetConfig(token, formId) { return OprosAdmin.load(token, formId); 
 function adminSaveConfig(token, payload) { return OprosAdmin.save(token, payload); }
 
 /** Run manually in the bound spreadsheet editor; web-app calls have no spreadsheet UI. */
-function setupAdmin() {
+function configureAdmin_() {
   var book = SpreadsheetApp.getActiveSpreadsheet();
   if (!book) throw new Error('Запустите setupAdmin в редакторе Apps Script связанной Google Таблицы.');
   var ui = SpreadsheetApp.getUi();

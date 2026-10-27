@@ -41,7 +41,7 @@ function submitResponse(payload) {
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Расширенная форма')
-    .addItem('Создать / проверить структуру', 'initializeSpreadsheet_')
+    .addItem('Первый запуск / подготовить структуру', 'startApp')
     .addItem('Проверить настройки', 'validateConfiguration_')
     .addItem('Создать / сменить пароль администратора', 'setupAdmin')
     .addSeparator().addItem('Как опубликовать', 'showPublishingGuide_').addToUi();
@@ -57,7 +57,7 @@ function initializeSpreadsheet_() {
     OprosForms.registry(book);
     PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', book.getId());
   } finally { lock.releaseLock(); }
-  SpreadsheetApp.getUi().alert('Готово', 'Созданы листы настроек, вопросов, списков и ответов. Существующие данные сохранены. Следующий шаг — развернуть веб-приложение.', SpreadsheetApp.getUi().ButtonSet.OK);
+  SpreadsheetApp.getUi().alert('Готово', 'Созданы листы настроек, вопросов, списков и ответов. Существующие данные сохранены. Если в вопросах есть ошибки, исправьте их через редактор администратора. Для первого запуска с настройкой пароля выполните startApp.', SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 function validateConfiguration_() {
@@ -74,4 +74,15 @@ function showPublishingGuide_() {
 /** Editor entry point; initialization checks for a spreadsheet UI context. */
 function setupForm() {
   initializeSpreadsheet_();
+}
+
+/** Single first-run entry point, visible in Code.gs in the Apps Script editor. */
+function startApp() {
+  initializeSpreadsheet_();
+  if (!PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD_HASH')) setupAdmin();
+}
+
+/** Kept in Code.gs so both setup actions are visible in the same editor file. */
+function setupAdmin() {
+  configureAdmin_();
 }
