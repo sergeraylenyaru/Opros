@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Опрос</title>
+  <style>
+    :root{color-scheme:light;--ink:#172735;--muted:#667984;--paper:#fff;--line:#dce5e7;--accent:#087f78;--soft:#e8f4ef;--danger:#b52c35;--radius:20px}
+    *{box-sizing:border-box}body{margin:0;color:var(--ink);font:16px/1.55 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f3f6f4;background-image:radial-gradient(ellipse at 10% 0%,#dfefea 0,transparent 50%)}
+    button,input,select,textarea{font:inherit}button,input,select,textarea,a{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #77bcb5;outline-offset:3px}
+    .shell{max-width:820px;margin:0 auto;padding:42px 24px 32px}.brand{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:750;letter-spacing:.11em;text-transform:uppercase;color:#476a62;margin-bottom:28px}.brand-mark{display:grid;place-items:center;width:28px;height:28px;background:var(--accent);color:white;border-radius:9px;font-size:19px;letter-spacing:0}
+    .hero{margin-bottom:28px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.13em;font-weight:750;color:var(--accent);margin:0 0 9px}h1{font-size:clamp(30px,5vw,43px);line-height:1.15;letter-spacing:-.035em;margin:0 0 16px;overflow-wrap:anywhere}h2{font-size:23px;letter-spacing:-.025em;margin:0 0 6px}.description{white-space:pre-wrap;color:var(--muted);margin:0;overflow-wrap:anywhere}.required-note{font-size:13px;color:var(--muted);margin:18px 0 0}.asterisk{color:var(--accent)}
+    .progress-card{margin-bottom:18px}.progress-meta{display:flex;justify-content:space-between;gap:20px;font-size:13px;color:var(--muted);margin-bottom:9px}.progress-track{height:5px;border-radius:9px;background:#dfe8e4;overflow:hidden}.progress-bar{height:100%;width:0;background:var(--accent);border-radius:9px;transition:width .25s ease}
+    .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 12px 35px #173c2d05;padding:32px}.section-heading{padding-bottom:25px;border-bottom:1px solid #edf1ef;margin-bottom:28px}.section-description{color:var(--muted);white-space:pre-wrap;margin:8px 0 0;font-size:15px}.question{margin:0 0 29px;min-width:0;padding:0;border:0}.question:last-child{margin-bottom:0}.question-label{font-size:16px;font-weight:650;margin:0 0 8px;display:block;overflow-wrap:anywhere}.question-help{font-size:13px;color:var(--muted);white-space:pre-wrap;margin:0 0 10px;overflow-wrap:anywhere}.field{width:100%;border:1px solid #cdd9d8;border-radius:10px;padding:11px 13px;background:#fcfdfc;color:var(--ink);transition:border-color .15s,box-shadow .15s}.field:hover{border-color:#9cb7b1}.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px #087f7812;outline:none}.field[aria-invalid=true]{border-color:var(--danger)}textarea.field{min-height:130px;resize:vertical}select.field{appearance:auto}.choice-list{display:grid;gap:9px}.choice{display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:15px;transition:background .15s,border-color .15s}.choice:has(input:checked){background:#f0f8f4;border-color:#82b6a9}.choice input{accent-color:var(--accent);flex:0 0 auto;margin:5px 0 0;width:17px;height:17px}.choice span{overflow-wrap:anywhere}.scale{display:flex;flex-wrap:wrap;gap:8px}.scale .choice{justify-content:center;align-items:center;position:relative;padding:10px;min-width:48px;flex:1}.scale .choice input{position:absolute;opacity:0;width:1px;height:1px}.scale .choice:has(input:focus-visible){outline:3px solid #77bcb5;outline-offset:2px}.scale .choice:has(input:checked){background:var(--accent);border-color:var(--accent);color:#fff}.error{color:var(--danger);font-size:13px;margin:7px 0 0}.question.has-error .choice{border-color:#d99ca2}.actions{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:24px}.action-right{display:flex;align-items:center;gap:14px;margin-left:auto}.button{border:0;border-radius:11px;padding:12px 22px;font-weight:650;font-size:14px;line-height:1.5;min-height:46px}.primary{background:var(--accent);color:#fff}.primary:hover{background:#066d67}.secondary{background:#e6ece8;color:#36534b}.secondary:hover{background:#dce6e0}.text-button{border:0;background:none;color:#4c6a61;text-decoration:underline;text-underline-offset:3px;font-size:13px;padding:3px;cursor:pointer}.draft-panel{margin-top:25px;padding:18px 2px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-top:1px solid #dce6e0}.draft-label{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:#4f655c}.draft-label input{accent-color:var(--accent);margin-top:4px}.draft-help{display:block;font-size:12px;color:var(--muted);margin:4px 0 0 23px;max-width:460px}.draft-status{font-size:12px;color:var(--accent);min-height:19px;margin:5px 0 0 23px}.banner{padding:15px 18px;border:1px solid #efc7ca;background:#fff5f5;border-radius:12px;color:#a62731;margin:0 0 18px;white-space:pre-wrap;overflow-wrap:anywhere}.banner.info{background:#edf6f1;border-color:#cfe3d8;color:#32634f}.status-card{text-align:center;padding:48px 32px}.status-icon{width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--accent);font-size:30px;margin:0 auto 21px}.status-card p{color:var(--muted);white-space:pre-wrap}.receipt{font-size:12px;overflow-wrap:anywhere}.loading-dots{display:flex;justify-content:center;gap:6px;margin-bottom:22px}.loading-dots i{height:8px;width:8px;border-radius:50%;background:var(--accent);animation:pulse 1.2s infinite}.loading-dots i:nth-child(2){animation-delay:.15s}.loading-dots i:nth-child(3){animation-delay:.3s}@keyframes pulse{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}.footer{display:flex;justify-content:space-between;gap:15px;font-size:11px;color:#829089;margin-top:25px}.hidden,[hidden]{display:none!important}.trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+    @media(max-width:560px){.shell{padding:25px 16px}.brand{margin-bottom:24px}.card{padding:24px 20px;border-radius:16px}.actions .button{padding:11px 17px}.action-right{gap:7px}.draft-panel{gap:12px}.draft-help{font-size:11px}.footer{flex-wrap:wrap}h2{font-size:21px}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">↗</span> Опрос · Расширенная форма</div>
+    <header id="hero" class="hero" hidden>
+      <p class="eyebrow">Ваше мнение имеет значение</p>
+      <h1 id="form-title"></h1><p id="form-description" class="description"></p>
+      <p class="required-note"><span class="asterisk">*</span> Обязательные вопросы</p>
+    </header>
+    <div id="announcement" class="banner" role="alert" hidden></div>
+    <div id="loading" class="card status-card" role="status"><div class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></div><h2>Загружаем форму</h2><p>Получаем вопросы и списки из таблицы.</p></div>
+    <section id="form-area" hidden>
+      <div class="progress-card"><div class="progress-meta"><span id="step-label"></span><span id="question-count"></span></div><div id="progress" class="progress-track" role="progressbar" aria-label="Прогресс заполнения" aria-valuemin="0" aria-valuemax="100"><div id="progress-bar" class="progress-bar"></div></div></div>
+      <form id="survey" novalidate>
+        <div class="card"><div id="section-heading" class="section-heading"><h2 id="section-title" tabindex="-1"></h2><p id="section-description" class="section-description"></p></div><div id="questions"></div></div>
+        <div class="trap" aria-hidden="true"><label for="company-website">Оставьте это поле пустым</label><input id="company-website" name="company_website" type="text" tabindex="-1" autocomplete="off"></div>
+        <div class="actions"><button id="back" class="button secondary" type="button">← Назад</button><div class="action-right"><button id="next" class="button primary" type="button">Продолжить →</button><button id="submit" class="button primary" type="submit">Отправить ответы</button></div></div>
+      </form>
+      <div class="draft-panel"><div><label class="draft-label"><input id="save-draft" type="checkbox"><span>Сохранять черновик на этом устройстве</span></label><span class="draft-help">Включайте только на личном устройстве. Ответы будут храниться в браузере до отправки или удаления.</span><p id="draft-status" class="draft-status" role="status" aria-live="polite"></p></div><button id="clear-draft" class="text-button" type="button">Очистить ответы</button></div>
+    </section>
+    <section id="result" class="card status-card" role="status" hidden><div id="result-icon" class="status-icon" aria-hidden="true">✓</div><h2 id="result-title"></h2><p id="result-message"></p><p id="receipt" class="receipt"></p></section>
+    <footer class="footer"><span>Ответы отправляются организатору в Google Таблицу</span><span>Работает на Google Apps Script</span></footer>
+  </main>
+  <script>
+  (function(global) {
+    'use strict';
+    function isEmpty(value) { return value === undefined || value === null || value === '' || value === false || (Array.isArray(value) && value.length === 0); }
+    function matches(rule, answers) {
+      if (!rule) return true;
+      var actual = answers[rule.question];
+      if (rule.operator === 'empty') return isEmpty(actual);
+      if (rule.operator === 'not_empty') return !isEmpty(actual);
+      if (isEmpty(actual)) return false;
+      switch(rule.operator) {
+        case 'equals': return actual === rule.value;
+        case 'not_equals': return actual !== rule.value;
+        case 'includes': return Array.isArray(actual) ? actual.indexOf(rule.value) !== -1 : String(actual).indexOf(String(rule.value)) !== -1;
+        default: return false;
+      }
+    }
+    function visibleQuestions(schema, answers) {
+      var effective = {}, sections = [];
+      (schema.sections || []).forEach(function(section) {
+        var questions = [];
+        (section.questions || []).forEach(function(q) {
+          if (matches(q.visibleIf, effective)) {
+            questions.push(q);
+            if (Object.prototype.hasOwnProperty.call(answers, q.id)) effective[q.id] = typeof answers[q.id] === 'string' ? answers[q.id].trim() : answers[q.id];
+          }
+        });
+        if (questions.length) sections.push(Object.assign({}, section, {questions: questions}));
+      });
+      return {sections: sections, answers: effective};
+    }
+    function validateQuestion(q, value) {
+      var v = q.validation || {};
+      if (isEmpty(value)) return q.required ? (q.type === 'checkbox' ? 'Нужно подтвердить согласие.' : 'Ответьте на этот вопрос.') : '';
+      if (q.type === 'checkbox') return value === true ? '' : 'Отметьте поле согласия.';
+      if (q.type === 'multiselect') {
+        if (!Array.isArray(value)) return 'Выберите варианты из списка.';
+        var allowed = (q.options || []).map(function(o) {return String(o.value);});
+        if (value.some(function(x) {return allowed.indexOf(String(x)) === -1;})) return 'Выберите варианты из списка.';
+        if (v.min !== undefined && value.length < Number(v.min)) return 'Выберите не менее ' + v.min + ' вариантов.';
+        if (v.max !== undefined && value.length > Number(v.max)) return 'Выберите не более ' + v.max + ' вариантов.';
+        return '';
+      }
+      if (q.type === 'select' || q.type === 'radio') {
+        return (q.options || []).some(function(o) {return String(o.value) === String(value);}) ? '' : 'Выберите вариант из списка.';
+      }
+      if (q.type === 'number' || q.type === 'scale') {
+        var number = Number(value);
+        if (!Number.isFinite(number)) return 'Введите число.';
+        if (q.type === 'scale' && !Number.isInteger(number)) return 'Выберите целое число на шкале.';
+        var min = v.min !== undefined ? Number(v.min) : (q.type === 'scale' ? 1 : undefined);
+        var max = v.max !== undefined ? Number(v.max) : (q.type === 'scale' ? 5 : undefined);
+        if (min !== undefined && number < min) return 'Минимальное значение: ' + min + '.';
+        if (max !== undefined && number > max) return 'Максимальное значение: ' + max + '.';
+        return '';
+      }
+      var text = String(value).trim();
+      if (q.required && !text) return 'Ответьте на этот вопрос.';
+      if (q.type === 'email' && (text.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text))) return 'Введите адрес электронной почты.';
+      if (q.type === 'date') {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return 'Укажите дату.';
+        var date = new Date(text + 'T00:00:00Z');
+        if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0,10) !== text) return 'Укажите корректную дату.';
+      }
+      if (v.minLength !== undefined && text.length < Number(v.minLength)) return 'Введите не менее ' + v.minLength + ' символов.';
+      if (text.length > (v.maxLength !== undefined ? Number(v.maxLength) : 10000)) return 'Ответ слишком длинный. Максимум: ' + (v.maxLength === undefined ? 10000 : v.maxLength) + ' символов.';
+      if (v.pattern) {
+        try { if (!new RegExp(v.pattern).test(text)) return v.patternMessage || 'Ответ не соответствует нужному формату.'; }
+        catch (e) { return 'Организатору нужно исправить правило проверки этого вопроса.'; }
+      }
+      return '';
+    }
+    global.OprosUI = {isEmpty:isEmpty, matches:matches, visibleQuestions:visibleQuestions, validateQuestion:validateQuestion};
+    if (typeof document === 'undefined') return;
+    var schema, answers = {}, errors = {}, email = '', emailError = '', step = 0, sending = false, submissionId = newId(), storageKey = '', draftEnabled = false;
+    var $ = function(id) { return document.getElementById(id); };
+    function newId() { return global.crypto && typeof global.crypto.randomUUID === 'function' ? global.crypto.randomUUID() : 'r_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2); }
+    function node(tag, className, text) {var el=document.createElement(tag); if(className)el.className=className; if(text!==undefined)el.textContent=text; return el;}
+    function announce(message, info) { $('announcement').textContent=message; $('announcement').className='banner'+(info?' info':''); $('announcement').hidden=!message; }
+    function currentState() { return visibleQuestions(schema, answers); }
+    function emailValidation() { if(!schema.collectEmail)return ''; return validateQuestion({type:'email',required:schema.emailRequired,validation:{}}, email.trim()); }
+    function readDraft() {
+      try {
+        var saved=JSON.parse(global.localStorage.getItem(storageKey)||'null');
+        if(!saved || saved.version!==1 || !saved.answers || typeof saved.answers!=='object' || Array.isArray(saved.answers)) return;
+        var known={}; schema.sections.forEach(function(s){s.questions.forEach(function(q){known[q.id]=q;});});
+        Object.keys(saved.answers).forEach(function(id){var value=saved.answers[id]; if(known[id]&&(typeof value==='string'||typeof value==='boolean'||typeof value==='number'||Array.isArray(value)))answers[id]=value;});
+        email=typeof saved.email==='string'?saved.email:'';
+        if(typeof saved.submissionId==='string' && /^[A-Za-z0-9_-]{16,80}$/.test(saved.submissionId))submissionId=saved.submissionId;
+        draftEnabled=true; $('save-draft').checked=true; $('draft-status').textContent='Черновик восстановлен на этом устройстве.';
+      }catch(e){$('draft-status').textContent='Браузер не разрешает доступ к черновикам.';}
+    }
+    function saveDraft() {
+      if(!draftEnabled)return;
+      try {global.localStorage.setItem(storageKey,JSON.stringify({version:1,answers:currentState().answers,email:email,submissionId:submissionId})); $('draft-status').textContent='Черновик сохранён в этом браузере.';}
+      catch(e){$('draft-status').textContent='Не удалось сохранить черновик. Форма работает без сохранения.';}
+    }
+    function removeDraft() {try{global.localStorage.removeItem(storageKey);return true;}catch(e){$('draft-status').textContent='Не удалось удалить черновик. Очистите данные сайта в настройках браузера.';return false;}}
+    function signature(state) {return state.sections.map(function(s){return s.id+':'+s.questions.map(function(q){return q.id;}).join(',');}).join('|');}
+    function changeAnswer(id,value) {
+      if(sending)return;
+      var before=currentState(), oldSection=before.sections[step]&&before.sections[step].id;
+      answers[id]=value; submissionId=newId(); delete errors[id];
+      var after=currentState();
+      if(signature(before)!==signature(after)) {
+        var nextStep=after.sections.findIndex(function(s){return s.id===oldSection;});step=nextStep<0?Math.min(step,after.sections.length-1):nextStep;
+        render(true);
+      } else {showQuestionError(id,'');updateProgress(after);}
+      saveDraft();
+    }
+    function questionElement(q) {
+      var groupType=['radio','multiselect','scale'].indexOf(q.type)!==-1;
+      var wrapper=node(groupType?'fieldset':'div','question');wrapper.id='question-'+q.id;
+      var label=node(groupType?'legend':'label','question-label',q.title);
+      if(!groupType)label.htmlFor='field-'+q.id;
+      if(q.required){label.appendChild(node('span','asterisk',' *'));var sr=node('span',null,' (обязательный вопрос)');sr.style.cssText='position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)';label.appendChild(sr);}
+      wrapper.appendChild(label);
+      if(q.description){var help=node('p','question-help',q.description);help.id='help-'+q.id;wrapper.appendChild(help);}
+      var value=answers[q.id], control;
+      function decorate(el){el.id='field-'+q.id;el.name=q.id;el.setAttribute('aria-required',q.required?'true':'false');el.setAttribute('aria-describedby',(q.description?'help-'+q.id+' ':'')+'error-'+q.id);el.setAttribute('aria-invalid',errors[q.id]?'true':'false');return el;}
+      if(groupType){
+        var choices=node('div',q.type==='scale'?'scale':'choice-list');
+        var options=q.options||[];
+        if(q.type==='scale'){var min=q.validation&&q.validation.min!==undefined?Number(q.validation.min):1;var max=q.validation&&q.validation.max!==undefined?Number(q.validation.max):5;options=[];for(var n=min;n<=max&&options.length<21;n++)options.push({value:n,label:String(n)});}
+        options.forEach(function(option,index){
+          var choice=node('label','choice'), input=node('input');input.type=q.type==='multiselect'?'checkbox':'radio';input.name=q.id;input.value=String(option.value);input.id='field-'+q.id+(index?'-'+index:'');
+          input.checked=q.type==='multiselect'?Array.isArray(value)&&value.map(String).indexOf(String(option.value))!==-1:!isEmpty(value)&&String(value)===String(option.value);
+          input.setAttribute('aria-describedby',(q.description?'help-'+q.id+' ':'')+'error-'+q.id);input.setAttribute('aria-invalid',errors[q.id]?'true':'false');
+          input.addEventListener('change',function(){if(q.type==='multiselect'){var selected=Array.prototype.filter.call(choices.querySelectorAll('input'),function(i){return i.checked;}).map(function(i){return i.value;});changeAnswer(q.id,selected);}else changeAnswer(q.id,q.type==='scale'?Number(input.value):input.value);});
+          choice.appendChild(input);choice.appendChild(node('span',null,option.label));choices.appendChild(choice);
+        });wrapper.appendChild(choices);
+      }else if(q.type==='checkbox'){
+        var choice=node('label','choice');control=decorate(node('input'));control.type='checkbox';control.checked=value===true;control.addEventListener('change',function(){changeAnswer(q.id,control.checked);});choice.appendChild(control);choice.appendChild(node('span',null,q.description?'Подтверждаю':'Согласен / согласна'));wrapper.appendChild(choice);
+      }else{
+        control=decorate(node(q.type==='paragraph'?'textarea':q.type==='select'?'select':'input','field'));
+        if(q.type==='select'){var placeholder=node('option',null,'Выберите вариант');placeholder.value='';control.appendChild(placeholder);(q.options||[]).forEach(function(o){var option=node('option',null,o.label);option.value=String(o.value);control.appendChild(option);});}
+        else if(q.type!=='paragraph'){control.type=['email','number','date'].indexOf(q.type)!==-1?q.type:'text';if(q.type==='number'){control.step='any';control.inputMode='decimal';}}
+        control.value=value===undefined||value===null?'':String(value);
+        var v=q.validation||{};if(v.min!==undefined&&['number','date'].indexOf(q.type)!==-1)control.min=String(v.min);if(v.max!==undefined&&['number','date'].indexOf(q.type)!==-1)control.max=String(v.max);if(v.maxLength!==undefined)control.maxLength=Number(v.maxLength);
+        control.addEventListener(q.type==='select'?'change':'input',function(){changeAnswer(q.id,q.type==='number'&&control.value!==''?Number(control.value):control.value);});wrapper.appendChild(control);
+      }
+      var error=node('p','error',errors[q.id]||'');error.id='error-'+q.id;error.hidden=!errors[q.id];wrapper.appendChild(error);if(errors[q.id])wrapper.classList.add('has-error');return wrapper;
+    }
+    function showQuestionError(id,message){var wrapper=$('question-'+id), error=$('error-'+id);if(!wrapper)return;wrapper.classList.toggle('has-error',!!message);if(error){error.textContent=message;error.hidden=!message;}Array.prototype.forEach.call(wrapper.querySelectorAll('input,textarea,select'),function(el){el.setAttribute('aria-invalid',message?'true':'false');});}
+    function emailElement(){
+      var wrapper=node('div','question');wrapper.id='question-respondent-email';var label=node('label','question-label','Электронная почта');label.htmlFor='respondent-email';if(schema.emailRequired)label.appendChild(node('span','asterisk',' *'));wrapper.appendChild(label);
+      wrapper.appendChild(node('p','question-help','Адрес будет передан организатору вместе с ответами.'));
+      var input=node('input','field');input.id='respondent-email';input.type='email';input.autocomplete='email';input.value=email;input.setAttribute('aria-required',schema.emailRequired?'true':'false');input.setAttribute('aria-describedby','error-respondent-email');input.setAttribute('aria-invalid',emailError?'true':'false');input.addEventListener('input',function(){email=input.value;emailError='';submissionId=newId();showQuestionError('respondent-email','');saveDraft();});wrapper.appendChild(input);
+      var error=node('p','error',emailError);error.id='error-respondent-email';error.hidden=!emailError;wrapper.appendChild(error);if(emailError)wrapper.classList.add('has-error');return wrapper;
+    }
+    function updateProgress(state){
+      var all=state.sections.reduce(function(list,s){return list.concat(s.questions);},[]), count=all.filter(function(q){return !isEmpty(state.answers[q.id]);}).length;
+      $('question-count').textContent='Заполнено '+count+' из '+all.length;
+      $('step-label').textContent='Раздел '+(step+1)+' из '+Math.max(1,state.sections.length);
+      var percent=all.length?Math.round(count/all.length*100):0;$('progress-bar').style.width=percent+'%';$('progress').setAttribute('aria-valuenow',String(percent));
+    }
+    function render(preserveFocus){
+      var active=document.activeElement, focusId=preserveFocus&&active&&active.id, start=active&&active.selectionStart, end=active&&active.selectionEnd;
+      var state=currentState();step=Math.max(0,Math.min(step,state.sections.length-1));var section=state.sections[step];
+      $('questions').replaceChildren();
+      $('section-title').textContent=section?section.title:'Вопросов пока нет';$('section-description').textContent=section?section.description||'':'Организатор ещё не добавил вопросы в форму.';$('section-description').hidden=!$('section-description').textContent;
+      if(schema.collectEmail&&step===0)$('questions').appendChild(emailElement());
+      if(section)section.questions.forEach(function(q){$('questions').appendChild(questionElement(q));});
+      $('back').hidden=step===0;$('next').hidden=step>=state.sections.length-1;$('submit').hidden=step<state.sections.length-1;$('submit').disabled=sending||!section;$('submit').textContent=sending?'Отправляем…':schema.submitLabel||'Отправить ответы';
+      updateProgress(state);
+      if(focusId&&$(focusId)){var target=$(focusId);target.focus({preventScroll:true});try{if(typeof start==='number')target.setSelectionRange(start,end);}catch(e){}}
+    }
+    function focusHeading(){ $('section-title').focus({preventScroll:true}); $('section-title').scrollIntoView({behavior:'smooth',block:'start'}); }
+    function validateSection(section, includeEmail){
+      var first='';if(includeEmail&&schema.collectEmail){emailError=emailValidation();showQuestionError('respondent-email',emailError);if(emailError)first='respondent-email';}
+      if(section)section.questions.forEach(function(q){var message=validateQuestion(q,answers[q.id]);if(message){errors[q.id]=message;if(!first)first='field-'+q.id;}else delete errors[q.id];showQuestionError(q.id,message);});return first;
+    }
+    function setBusy(value){sending=value;Array.prototype.forEach.call($('survey').querySelectorAll('input,select,textarea,button'),function(el){el.disabled=value;});$('save-draft').disabled=value;$('clear-draft').disabled=value;$('submit').textContent=value?'Отправляем…':schema.submitLabel||'Отправить ответы';$('survey').setAttribute('aria-busy',value?'true':'false');}
+    function showResult(title,message,success,id){$('loading').hidden=true;$('form-area').hidden=true;$('result').hidden=false;$('result-icon').textContent=success?'✓':'—';$('result-title').textContent=title;$('result-message').textContent=message;$('receipt').textContent=id?'Номер ответа: '+id:'';$('result-title').setAttribute('tabindex','-1');$('result-title').focus({preventScroll:true});}
+    $('back').addEventListener('click',function(){if(sending)return;step--;announce('');render();focusHeading();});
+    $('next').addEventListener('click',function(){if(sending)return;var state=currentState(),first=validateSection(state.sections[step],step===0);if(first){announce('Проверьте отмеченные ответы.');if($(first))$(first).focus();return;}announce('');step++;render();focusHeading();saveDraft();});
+    $('save-draft').addEventListener('change',function(){draftEnabled=this.checked;if(draftEnabled)saveDraft();else if(removeDraft())$('draft-status').textContent='Сохранение выключено. Черновик удалён с устройства.';});
+    $('clear-draft').addEventListener('click',function(){if(sending)return;if(!global.confirm('Удалить все введённые ответы и сохранённый черновик?'))return;answers={};errors={};email='';emailError='';step=0;submissionId=newId();draftEnabled=false;$('save-draft').checked=false;if(removeDraft())$('draft-status').textContent='Ответы и черновик удалены.';announce('');render();focusHeading();});
+    $('survey').addEventListener('submit',function(event){
+      event.preventDefault();if(sending)return;var state=currentState(),first='',badStep=0;
+      state.sections.forEach(function(section,index){var bad=validateSection(section,index===0);if(!first&&bad){first=bad;badStep=index;}});
+      if(first){step=badStep;render();announce('Проверьте отмеченные ответы.');if($(first))$(first).focus();return;}
+      announce('');saveDraft();setBusy(true);
+      var payload={submissionId:submissionId,answers:state.answers,respondentEmail:schema.collectEmail?email.trim():'',honeypot:$('company-website').value};
+      try{global.google.script.run.withSuccessHandler(function(response){
+        if(!response||response.ok!==true){setBusy(false);announce('Сервер не подтвердил сохранение. Попробуйте ещё раз: повторная отправка не создаст дубликат.');return;}
+        var cleared=removeDraft();draftEnabled=false;showResult('Спасибо за ответы!',response.message||schema.confirmationMessage||'Ответы сохранены.',true,response.submissionId||submissionId);if(!cleared)announce('Ответ сохранён, но браузер не позволил удалить черновик. Очистите данные сайта в настройках браузера.',true);else announce('');
+      }).withFailureHandler(function(error){setBusy(false);announce(error&&error.message?error.message:'Не удалось отправить ответы. Проверьте соединение и попробуйте ещё раз.');}).submitResponse(payload);}
+      catch(error){setBusy(false);announce('Не удалось связаться с Google Apps Script. Откройте форму по адресу развёрнутого веб-приложения.');}
+    });
+    function loaded(data){
+      if(!data||!Array.isArray(data.sections))throw new Error('Сервер вернул некорректную конфигурацию формы.');
+      schema=data;document.title=schema.title||'Опрос';$('form-title').textContent=schema.title||'Опрос';$('form-description').textContent=schema.description||'';$('hero').hidden=false;$('loading').hidden=true;
+      if(!schema.acceptResponses){showResult('Приём ответов закрыт',schema.closedMessage||'Сейчас эта форма не принимает ответы.',false);return;}
+      var fingerprint=String(schema.formId||schema.title+'|'+schema.sections.map(function(s){return s.questions.map(function(q){return q.id;}).join(',');}).join('|'));
+      storageKey='opros-draft-v1:'+fingerprint;readDraft();$('form-area').hidden=false;render();
+    }
+    try{
+      if(!global.google||!global.google.script||!global.google.script.run)throw new Error('Откройте форму по адресу веб-приложения Google Apps Script. Инструкция по развёртыванию находится в README проекта.');
+      global.google.script.run.withSuccessHandler(function(data){try{loaded(data);}catch(error){showResult('Не удалось загрузить форму',error.message,false);}}).withFailureHandler(function(error){showResult('Не удалось загрузить форму',error&&error.message?error.message:'Проверьте соединение или обратитесь к организатору.',false);}).getFormSchema();
+    }catch(error){showResult('Не удалось загрузить форму',error.message,false);}
+  })(typeof window==='undefined'?globalThis:window);
+  </script>
+</body>
+</html>

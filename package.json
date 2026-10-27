@@ -1,0 +1,11 @@
+{
+  "name": "opros-apps-script",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Расширенная форма Google Apps Script с настройками в Google Таблице",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:browser": "node tools/browser-smoke.js"
+  },
+  "engines": { "node": ">=22" }
+}
