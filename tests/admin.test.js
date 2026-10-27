@@ -42,3 +42,8 @@ test('write failure rolls prior sheets back instead of leaving partial configura
  r.sheets.Questions.getRange=(...args)=>{const range=getRange(...args),write=range.setValues.bind(range);range.setValues=values=>{if(fail){fail=false;throw Error('Simulated quota failure');}return write(values);};return range;};
  assert.throws(()=>c.adminSaveConfig(token,config),/восстановлены/);assert.equal(c.adminGetConfig(token).revision,before);
 });
+test('headless bootstrap and admin setup never require a spreadsheet dialog or leak the setup key',()=>{
+ const r=runtime(),c=r.context;c.SpreadsheetApp.getUi=()=>{throw Error('Cannot call SpreadsheetApp.getUi() from this context.');};c.startApp();assert.equal(r.properties.SPREADSHEET_ID,r.book.getId());assert.equal(r.properties.ADMIN_PASSWORD_HASH,undefined);
+ const key=require('node:crypto').randomBytes(32).toString('hex');r.properties.ADMIN_SETUP_KEY=key;c.startApp();assert.equal(r.properties.ADMIN_SETUP_KEY,undefined);assert.ok(c.adminLogin(key).token);const hash=r.properties.ADMIN_PASSWORD_HASH;c.startApp();assert.equal(r.properties.ADMIN_PASSWORD_HASH,hash);
+});
+test('invalid pending setup key is rejected without replacing an existing password',()=>{const r=fixture(),hash=r.properties.ADMIN_PASSWORD_HASH;r.properties.ADMIN_SETUP_KEY='weak';assert.throws(()=>r.context.setupAdmin(),/64/);assert.equal(r.properties.ADMIN_PASSWORD_HASH,hash);});

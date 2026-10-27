@@ -57,7 +57,7 @@ function initializeSpreadsheet_() {
     OprosForms.registry(book);
     PropertiesService.getScriptProperties().setProperty('SPREADSHEET_ID', book.getId());
   } finally { lock.releaseLock(); }
-  SpreadsheetApp.getUi().alert('Готово', 'Созданы листы настроек, вопросов, списков и ответов. Существующие данные сохранены. Если в вопросах есть ошибки, исправьте их через редактор администратора. Для первого запуска с настройкой пароля выполните startApp.', SpreadsheetApp.getUi().ButtonSet.OK);
+  setupNotice_('Структура готова, привязка сохранена. Запустите startApp для настройки администратора.');
 }
 
 function validateConfiguration_() {
@@ -79,10 +79,16 @@ function setupForm() {
 /** Single first-run entry point, visible in Code.gs in the Apps Script editor. */
 function startApp() {
   initializeSpreadsheet_();
-  if (!PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD_HASH')) setupAdmin();
+  var properties = PropertiesService.getScriptProperties();
+  if (!properties.getProperty('ADMIN_PASSWORD_HASH') || properties.getProperty('ADMIN_SETUP_KEY')) setupAdmin();
+  else setupNotice_('Настройка завершена. Пароль администратора сохранён без изменений.');
 }
 
 /** Kept in Code.gs so both setup actions are visible in the same editor file. */
 function setupAdmin() {
   configureAdmin_();
+}
+
+function setupNotice_(message) {
+  if (typeof Logger !== 'undefined') Logger.log(message);
 }

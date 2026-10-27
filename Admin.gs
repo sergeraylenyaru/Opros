@@ -107,8 +107,25 @@ function adminSaveConfig(token, payload) { return OprosAdmin.save(token, payload
 function configureAdmin_() {
   var book = SpreadsheetApp.getActiveSpreadsheet();
   if (!book) throw new Error('Запустите setupAdmin в редакторе Apps Script связанной Google Таблицы.');
-  var ui = SpreadsheetApp.getUi();
   if (book.getId() !== OprosStore.workbook().getId()) throw new Error('Откройте редактор нужной таблицы.');
+  var properties = PropertiesService.getScriptProperties();
+  var pending = properties.getProperty('ADMIN_SETUP_KEY');
+  if (pending) {
+    if (!/^[a-f0-9]{64}$/i.test(pending)) throw new Error('ADMIN_SETUP_KEY должен содержать 64 шестнадцатеричных символа. Создайте ключ через crypto.randomBytes(32).');
+    var keyLock = LockService.getScriptLock();
+    if (!keyLock.tryLock(20000)) throw new Error('Сервис занят. Повторите позже.');
+    try {
+      properties.setProperty('ADMIN_PASSWORD_HASH', OprosAdmin.hash(pending));
+      properties.deleteProperty('ADMIN_SETUP_KEY');
+    } finally { keyLock.releaseLock(); }
+    setupNotice_('Пароль администратора настроен из ADMIN_SETUP_KEY. Исходный ключ удалён из свойств. Используйте сохранённый вами ключ для входа.');
+    return;
+  }
+  var ui;
+  try { ui = SpreadsheetApp.getUi(); } catch (unavailable) {
+    setupNotice_('Структура готова. Окна таблицы недоступны. В настройках проекта добавьте ADMIN_SETUP_KEY (64 hex символа), сохраните свой ключ и запустите startApp ещё раз. Не передавайте ключ в чат.');
+    return;
+  }
   var answer = ui.alert('Пароль администратора', 'Создать новый пароль? Действующие сессии администратора будут завершены.', ui.ButtonSet.YES_NO);
   if (answer !== ui.Button.YES) return;
   // Generated high-entropy password: only its SHA-256 digest is persisted.
