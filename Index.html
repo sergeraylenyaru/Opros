@@ -16,10 +16,12 @@
     @media(max-width:560px){.shell{padding:25px 16px}.brand{margin-bottom:24px}.card{padding:24px 20px;border-radius:16px}.actions .button{padding:11px 17px}.action-right{gap:7px}.draft-panel{gap:12px}.draft-help{font-size:11px}.footer{flex-wrap:wrap}h2{font-size:21px}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
     .picker-dialog{border:1px solid var(--line);border-radius:18px;padding:24px;width:min(620px,94vw);max-height:90vh;overflow:auto;color:var(--ink)}.picker-dialog::backdrop{background:#17273588}.picker-dialog h2{margin-bottom:18px}.picker-dialog .button{margin:8px 8px 0 0}.person-results{max-height:45vh;overflow:auto;margin:12px 0}.person-option{display:block;width:100%;padding:12px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;color:var(--ink)}.person-option:hover,.person-option:focus{background:var(--soft)}.map-view{height:300px;position:relative;overflow:hidden;background:#e3e9e5;touch-action:none;cursor:crosshair;border:1px solid var(--line);border-radius:10px}.map-marker{position:absolute;transform:translate(-50%,-50%);font-size:30px;line-height:1;color:#bd2339;text-shadow:0 0 3px white;pointer-events:none}.map-controls{display:flex;gap:8px;margin-bottom:10px}.selected-answer{margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+    .admin-card{margin:18px 0}.admin-field{display:block;margin:14px 0}.admin-field>span{display:block;font-size:14px;font-weight:600;margin-bottom:6px}.admin-field input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}.admin-section{border-top:1px solid var(--line);margin-top:20px;padding-top:12px}.admin-actions{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.admin-summary{cursor:pointer;font-weight:650;font-size:18px;overflow-wrap:anywhere}.admin-rules{margin:20px 0}.admin-toolbar{position:sticky;top:0;z-index:5;background:#f3f6f4;padding:12px 0;display:flex;gap:8px;flex-wrap:wrap}.admin-entry{display:flex;justify-content:flex-end;margin-bottom:12px}
   </style>
 </head>
 <body>
   <main class="shell">
+    <div class="admin-entry"><button id="admin-login" type="button" class="text-button">Вход администратора</button></div>
     <div class="brand"><span class="brand-mark" aria-hidden="true">↗</span> Опрос · Расширенная форма</div>
     <header id="hero" class="hero" hidden>
       <p class="eyebrow">Ваше мнение имеет значение</p>
@@ -38,6 +40,13 @@
       <div class="draft-panel"><div><label class="draft-label"><input id="save-draft" type="checkbox"><span>Сохранять черновик на этом устройстве</span></label><span class="draft-help">Включайте только на личном устройстве. Ответы будут храниться в браузере до отправки или удаления.</span><p id="draft-status" class="draft-status" role="status" aria-live="polite"></p></div><button id="clear-draft" class="text-button" type="button">Очистить ответы</button></div>
     </section>
     <section id="result" class="card status-card" role="status" hidden><div id="result-icon" class="status-icon" aria-hidden="true">✓</div><h2 id="result-title"></h2><p id="result-message"></p><p id="receipt" class="receipt"></p></section>
+    <section id="admin-panel" hidden>
+      <h1 id="admin-title" tabindex="-1">Редактор анкеты</h1>
+      <p id="admin-state" role="status"></p>
+      <div class="admin-toolbar"><button id="admin-save" type="button" class="button primary">Сохранить изменения</button><button id="admin-refresh" type="button" class="button secondary">Обновить из таблицы</button><button id="admin-exit" type="button" class="button secondary">Выйти к форме</button></div>
+      <div id="admin-message" class="banner" role="status" hidden></div>
+      <div id="admin-fields"></div>
+    </section>
     <footer class="footer"><span>Ответы отправляются организатору в Google Таблицу</span><span>Работает на Google Apps Script</span></footer>
   </main>
   <script>
@@ -285,6 +294,90 @@
       }).withFailureHandler(function(error){setBusy(false);announce(error&&error.message?error.message:'Не удалось отправить ответы. Проверьте соединение и попробуйте ещё раз.');}).submitResponse(payload);}
       catch(error){setBusy(false);announce('Не удалось связаться с Google Apps Script. Откройте форму по адресу развёрнутого веб-приложения.');}
     });
+    // Administrator credentials and session token stay in this tab's memory only.
+    var adminToken='', adminDraft=null, adminDirty=false, adminBusy=false;
+    function adminCall(method,args){
+      return new Promise(function(resolve,reject){
+        var runner=global.google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
+        if(method==='login')runner.adminLogin(args[0]);
+        if(method==='load')runner.adminGetConfig(args[0]);
+        if(method==='save')runner.adminSaveConfig(args[0],args[1]);
+        if(method==='logout')runner.adminLogout(args[0]);
+      });
+    }
+    function adminMessage(message,success){var el=$('admin-message');el.textContent=message;el.className=success?'banner info':'banner';el.hidden=!message;}
+    function adminSetBusy(busy){adminBusy=busy;Array.prototype.forEach.call($('admin-panel').querySelectorAll('button,input,select,textarea'),function(el){el.disabled=busy;});$('admin-panel').setAttribute('aria-busy',String(busy));}
+    function adminChanged(){adminDirty=true;$('admin-state').textContent='Есть несохранённые изменения';}
+    function adminBoolean(value){return value===true||value===1||/^(true|yes|1)$/i.test(String(value));}
+    function adminField(parent,label,value,change,kind,choices){
+      var wrap=node('label','admin-field'),caption=node('span',null,label);wrap.appendChild(caption);
+      var input=node(kind==='textarea'?'textarea':kind==='select'?'select':'input','field');
+      if(kind==='select')choices.forEach(function(o){var option=node('option',null,o.label);option.value=o.value;input.appendChild(option);});
+      else if(kind!=='textarea')input.type=kind||'text';
+      if(kind==='checkbox'){input.className='';input.checked=adminBoolean(value);}else input.value=value==null?'':String(value);
+      input.addEventListener(kind==='checkbox'||kind==='select'?'change':'input',function(){change(kind==='checkbox'?input.checked:input.value);adminChanged();});wrap.appendChild(input);parent.appendChild(wrap);return input;
+    }
+    function adminButton(parent,label,action,css){var button=node('button','button '+(css||'secondary'),label);button.type='button';button.addEventListener('click',action);parent.appendChild(button);return button;}
+    function adminParse(value){try{return JSON.parse(value||'{}');}catch(e){return {};}}
+    function adminRender(){
+      var area=$('admin-fields');area.replaceChildren();
+      var general=node('div','card admin-card');general.appendChild(node('h2',null,'Настройки формы'));area.appendChild(general);
+      function setting(key,label,kind,fallback){var row=adminDraft.settings.find(function(r){return r.key===key;});if(!row){row={key:key,value:fallback===undefined?'':fallback,description:''};adminDraft.settings.push(row);}adminField(general,label,row.value,function(value){row.value=value;},kind);}
+      setting('form_title','Название');setting('form_description','Описание','textarea');setting('confirmation_message','Сообщение после отправки','textarea');setting('submit_label','Текст кнопки отправки');setting('accept_responses','Принимать ответы','checkbox',true);setting('collect_email','Собирать email','checkbox',false);setting('email_required','Email обязателен','checkbox',false);setting('max_responses','Лимит ответов (0 — без ограничения)','number',0);setting('closed_message','Сообщение закрытой формы');setting('fio_range','Диапазон ФИО',null,'People!A2:A');
+      general.appendChild(node('p','question-help','ФИО всегда обязательно и показывается первым. Список берётся из указанного диапазона. ФИО и ответы участников этот редактор не изменяет.'));
+      var sections=node('div','card admin-card');sections.appendChild(node('h2',null,'Разделы'));area.appendChild(sections);
+      adminDraft.sections.slice().sort(function(a,b){return Number(a.position)-Number(b.position);}).forEach(function(section){
+        var row=node('div','admin-section');row.appendChild(node('p','question-help','ID: '+section.id));
+        adminField(row,'Название раздела',section.title,function(value){section.title=value;});adminField(row,'Описание',section.description,function(value){section.description=value;},'textarea');adminField(row,'Порядок',section.position,function(value){section.position=value;},'number');adminField(row,'Раздел включён',section.enabled===''||section.enabled==null?true:section.enabled,function(value){section.enabled=value;},'checkbox');
+        adminButton(row,'Удалить раздел',function(){if(adminDraft.questions.some(function(q){return q.section_id===section.id;})){adminMessage('Сначала перенесите или удалите вопросы этого раздела.');return;}if(!global.confirm('Удалить раздел «'+section.title+'»?'))return;adminDraft.sections=adminDraft.sections.filter(function(s){return s!==section;});adminChanged();adminRender();});sections.appendChild(row);
+      });
+      adminButton(sections,'+ Добавить раздел',function(){adminDraft.sections.push({id:'s_'+Date.now().toString(36),title:'Новый раздел',description:'',position:adminDraft.sections.length*10+10,enabled:true});adminChanged();adminRender();});
+      var questions=node('div');questions.appendChild(node('h2',null,'Вопросы'));questions.appendChild(node('p','question-help','ID существующих вопросов сохраняются. Удаление вопроса не удаляет ранее полученные ответы.'));area.appendChild(questions);
+      var types=[['text','Короткий текст'],['paragraph','Длинный текст'],['email','Email'],['number','Число'],['date','Дата'],['select','Выпадающий список'],['radio','Один вариант'],['multiselect','Несколько вариантов (галочки)'],['checkbox','Флажок согласия'],['scale','Шкала'],['map','Отметка на карте'],['person','Поиск по списку']].map(function(pair){return {value:pair[0],label:pair[1]};});
+      var sectionOptions=adminDraft.sections.map(function(s){return {value:s.id,label:s.title+(adminBoolean(s.enabled)?'':' (выключен)')};});
+      var sectionOrder={};adminDraft.sections.slice().sort(function(a,b){return Number(a.position)-Number(b.position);}).forEach(function(s,i){sectionOrder[s.id]=i;});
+      adminDraft.questions.slice().sort(function(a,b){return (sectionOrder[a.section_id]-sectionOrder[b.section_id])||Number(a.position)-Number(b.position);}).forEach(function(q){
+        var card=node('details','card admin-card');card.dataset.questionId=q.id;
+        var summary=node('summary','admin-summary',q.title+(adminBoolean(q.enabled)?'':' (выключен)'));card.appendChild(summary);questions.appendChild(card);
+        card.appendChild(node('p','question-help','ID: '+q.id));
+        adminField(card,'Вопрос',q.title,function(value){q.title=value;summary.textContent=value;});adminField(card,'Пояснение',q.description,function(value){q.description=value;},'textarea');
+        adminField(card,'Тип ответа',q.type,function(value){q.type=value;adminChanged();adminRender();var found=document.querySelector('[data-question-id="'+q.id+'"]');if(found)found.open=true;},'select',types);
+        var destinations=sectionOptions.slice();if(!destinations.some(function(s){return s.value===q.section_id;}))destinations.push({value:q.section_id,label:'Не найден: '+q.section_id});
+        adminField(card,'Раздел',q.section_id,function(value){q.section_id=value;},'select',destinations);adminField(card,'Порядок в разделе',q.position,function(value){q.position=value;},'number');adminField(card,'Обязательный вопрос',q.required,function(value){q.required=value;},'checkbox');adminField(card,'Вопрос включён',q.enabled===''||q.enabled==null?true:q.enabled,function(value){q.enabled=value;},'checkbox');
+        if(['radio','select','multiselect','person'].indexOf(q.type)>=0){
+          var sources=[{value:'',label:'Варианты этого вопроса'}];adminDraft.lists.forEach(function(r){var value='list:'+r.list_id;if(!sources.some(function(s){return s.value===value;}))sources.push({value:value,label:'Справочник '+r.list_id});});
+          if(q.options_source&&!sources.some(function(s){return s.value===q.options_source;}))sources.push({value:q.options_source,label:q.options_source});
+          adminField(card,'Источник вариантов',q.options_source||'',function(value){q.options_source=value;adminChanged();adminRender();var found=document.querySelector('[data-question-id="'+q.id+'"]');if(found)found.open=true;},'select',sources);
+          if(!q.options_source){var options;try{options=JSON.parse(q.options_json||'[]');}catch(e){options=[];}
+            var lines=Array.isArray(options)?options.map(function(o){return typeof o==='string'?o:String(o.value)+' | '+String(o.label||o.value);}).join('\n'):'';
+            adminField(card,'Варианты: каждый с новой строки. Можно указать значение | подпись',lines,function(value){q.options_json=JSON.stringify(value.split('\n').map(function(line){return line.trim();}).filter(Boolean).map(function(line){var index=line.indexOf('|');return index<0?line:{value:line.slice(0,index).trim(),label:line.slice(index+1).trim()};}));},'textarea');}
+        }
+        var rules=node('details','admin-rules');rules.appendChild(node('summary',null,'Условия показа и проверка ответов'));card.appendChild(rules);
+        var condition=adminParse(q.visible_if_json),parents=[{value:'',label:'Показывать всегда'}].concat(adminDraft.questions.filter(function(p){return p.id!==q.id;}).map(function(p){return {value:p.id,label:p.title};}));
+        var conditionArea=node('div');rules.appendChild(conditionArea);
+        function saveCondition(){q.visible_if_json=condition.question?JSON.stringify(condition):'';}
+        adminField(conditionArea,'Зависит от вопроса',condition.question||'',function(value){condition.question=value;condition.operator=condition.operator||'equals';saveCondition();},'select',parents);
+        adminField(conditionArea,'Условие',condition.operator||'equals',function(value){condition.operator=value;saveCondition();},'select',[{value:'equals',label:'Равно'},{value:'not_equals',label:'Не равно'},{value:'includes',label:'Содержит'},{value:'empty',label:'Не заполнено'},{value:'not_empty',label:'Заполнено'}]);
+        var valueKind=typeof condition.value==='number'?'number':typeof condition.value==='boolean'?'boolean':'text';var conditionText=condition.value===undefined?'':String(condition.value);
+        function updateConditionValue(){condition.value=valueKind==='number'?Number(conditionText):valueKind==='boolean'?conditionText==='true':conditionText;saveCondition();}
+        adminField(conditionArea,'Значение для сравнения',conditionText,function(value){conditionText=value;updateConditionValue();});adminField(conditionArea,'Тип значения',valueKind,function(value){valueKind=value;updateConditionValue();},'select',[{value:'text',label:'Текст / код варианта'},{value:'number',label:'Число'},{value:'boolean',label:'Логическое: true или false'}]);
+        var validation=adminParse(q.validation_json);[['min','Минимум (число / количество вариантов)'],['max','Максимум (число / количество вариантов)'],['minLength','Минимальная длина текста'],['maxLength','Максимальная длина текста'],['pattern','Регулярное выражение'],['patternMessage','Сообщение о неверном формате']].forEach(function(pair){adminField(rules,pair[1],validation[pair[0]],function(value){if(value==='')delete validation[pair[0]];else validation[pair[0]]=pair[0]==='pattern'||pair[0]==='patternMessage'?value:Number(value);q.validation_json=JSON.stringify(validation);},pair[0]==='pattern'||pair[0]==='patternMessage'?'text':'number');});
+        rules.appendChild(node('p','question-help','Условие может ссылаться только на более ранний включённый вопрос. Для вариантов сравнивается код значения. Для empty / not_empty значение не требуется.'));
+        var actions=node('div','admin-actions');card.appendChild(actions);
+        function move(delta){var siblings=adminDraft.questions.filter(function(p){return p.section_id===q.section_id;}).sort(function(a,b){return Number(a.position)-Number(b.position);});var index=siblings.indexOf(q),other=index+delta;if(other<0||other>=siblings.length)return;var tmp=siblings[index];siblings[index]=siblings[other];siblings[other]=tmp;siblings.forEach(function(p,i){p.position=(i+1)*10;});adminChanged();adminRender();}
+        adminButton(actions,'↑ Выше',function(){move(-1);});adminButton(actions,'↓ Ниже',function(){move(1);});adminButton(actions,'Удалить вопрос',function(){if(!global.confirm('Удалить вопрос «'+q.title+'»? Прежние ответы сохранятся.'))return;adminDraft.questions=adminDraft.questions.filter(function(p){return p!==q;});adminChanged();adminRender();});
+      });
+      adminButton(questions,'+ Добавить вопрос',function(){if(!adminDraft.sections.length){adminMessage('Сначала добавьте раздел.');return;}adminDraft.questions.push({id:'q_'+Date.now().toString(36),section_id:adminDraft.sections[0].id,title:'Новый вопрос',description:'',type:'text',required:false,enabled:true,position:Math.max(0,...adminDraft.questions.map(function(q){return Number(q.position)||0;}))+10,options_source:'',options_json:'',visible_if_json:'',validation_json:''});adminChanged();adminRender();var last=adminDraft.questions[adminDraft.questions.length-1];var found=document.querySelector('[data-question-id="'+last.id+'"]');if(found){found.open=true;found.scrollIntoView({behavior:'smooth'});}});
+    }
+    $('admin-login').addEventListener('click',function(){
+      var box=dialogBox('Вход администратора'),form=node('form'),label=node('label','question-label','Пароль администратора');label.htmlFor='admin-password';var password=node('input','field');password.type='password';password.id='admin-password';password.autocomplete='current-password';password.required=true;var error=node('p','error');error.setAttribute('role','alert');var submit=node('button','button primary','Войти');submit.type='submit';form.appendChild(label);form.appendChild(password);form.appendChild(error);form.appendChild(submit);box.body.appendChild(form);box.body.appendChild(node('p','question-help','Пароль создаётся владельцем таблицы через setupAdmin в редакторе Apps Script. Сессия действует до 30 минут.'));password.focus();
+      form.addEventListener('submit',async function(event){event.preventDefault();submit.disabled=true;error.textContent='';try{var result=await adminCall('login',[password.value]);password.value='';adminToken=result.token;adminDraft=await adminCall('load',[adminToken]);adminDirty=false;box.dialog.close();['hero','form-area','result','loading'].forEach(function(id){$(id).hidden=true;});announce('');$('admin-login').hidden=true;$('admin-panel').hidden=false;adminMessage('');$('admin-state').textContent='Все изменения сохранены';adminRender();$('admin-title').focus();}catch(e){error.textContent=e.message||'Не удалось войти.';submit.disabled=false;}});
+    });
+    $('admin-save').addEventListener('click',async function(){if(adminBusy)return;adminSetBusy(true);adminMessage('');try{adminDraft=await adminCall('save',[adminToken,adminDraft]);adminDirty=false;adminRender();$('admin-state').textContent='Все изменения сохранены';adminMessage('Настройки сохранены в Google Таблице. Новые участники увидят их при загрузке формы.',true);}catch(e){adminMessage(e.message||'Не удалось сохранить. Ваши изменения остались в редакторе.');}finally{adminSetBusy(false);}});
+    $('admin-refresh').addEventListener('click',async function(){if(adminBusy||adminDirty&&!global.confirm('Загрузить настройки заново? Несохранённые изменения будут потеряны.'))return;adminSetBusy(true);try{adminDraft=await adminCall('load',[adminToken]);adminDirty=false;adminRender();$('admin-state').textContent='Все изменения сохранены';adminMessage('');}catch(e){adminMessage(e.message);}finally{adminSetBusy(false);}});
+    $('admin-exit').addEventListener('click',async function(){if(adminBusy||adminDirty&&!global.confirm('Выйти без сохранения изменений?'))return;adminSetBusy(true);try{await adminCall('logout',[adminToken]);adminToken='';adminDraft=null;adminDirty=false;$('admin-panel').hidden=true;$('admin-login').hidden=false;step=0;global.google.script.run.withSuccessHandler(loaded).withFailureHandler(function(e){showResult('Не удалось загрузить форму',e.message,false);}).getFormSchema();}catch(e){adminMessage(e.message);}finally{adminSetBusy(false);}});
+    global.addEventListener('beforeunload',function(event){if(adminDirty){event.preventDefault();event.returnValue='';}});
+
     function loaded(data){
       if(!data||!Array.isArray(data.sections))throw new Error('Сервер вернул некорректную конфигурацию формы.');
       schema=data;document.title=schema.title||'Опрос';$('form-title').textContent=schema.title||'Опрос';$('form-description').textContent=schema.description||'';$('hero').hidden=false;$('loading').hidden=true;

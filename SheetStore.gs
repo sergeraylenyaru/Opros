@@ -28,8 +28,10 @@ var OprosStore = (function () {
     });
   }
   function schema(book) {
-    var settings = readRows(book, 'Settings');
-    var result = OprosDomain.buildSchema(settings, readRows(book, 'Sections'), readRows(book, 'Questions'), readRows(book, 'Lists'));
+    return schemaFromRows(book, readRows(book, 'Settings'), readRows(book, 'Sections'), readRows(book, 'Questions'), readRows(book, 'Lists'));
+  }
+  function schemaFromRows(book, settings, sections, questions, lists) {
+    var result = OprosDomain.buildSchema(settings, sections, questions, lists);
     if (result.sections.some(function (s) { return s.questions.some(function (q) { return q.id === 'respondent_fio'; }); })) throw new Error('ID respondent_fio зарезервирован для обязательного ФИО.');
     var range = settings.filter(function (r) { return r.key === 'fio_range'; })[0];
     result.sections[0].questions.unshift({ id: 'respondent_fio', title: 'ФИО', description: 'Выберите себя в списке. Для поиска введите часть ФИО.', type: 'person', required: true, options: people(book, range ? range.value : 'People!A2:A'), visibleIf: null, validation: {} });
@@ -157,5 +159,5 @@ var OprosStore = (function () {
     sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
     SpreadsheetApp.flush();
   }
-  return { workbook: workbook, schema: schema, initialize: initialize, responses: responses, findSubmission: findSubmission, append: append, safeCell: safeCell };
+  return { readRows: readRows, schemaFromRows: schemaFromRows, workbook: workbook, schema: schema, initialize: initialize, responses: responses, findSubmission: findSubmission, append: append, safeCell: safeCell };
 })();

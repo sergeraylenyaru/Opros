@@ -39,6 +39,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('Расширенная форма')
     .addItem('Создать / проверить структуру', 'initializeSpreadsheet_')
     .addItem('Проверить настройки', 'validateConfiguration_')
+    .addItem('Создать / сменить пароль администратора', 'setupAdmin')
     .addSeparator().addItem('Как опубликовать', 'showPublishingGuide_').addToUi();
 }
 
