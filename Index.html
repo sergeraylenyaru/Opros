@@ -18,6 +18,7 @@
     .picker-dialog{border:1px solid var(--line);border-radius:18px;padding:24px;width:min(620px,94vw);max-height:90vh;overflow:auto;color:var(--ink)}.picker-dialog::backdrop{background:#17273588}.picker-dialog h2{margin-bottom:18px}.picker-dialog .button{margin:8px 8px 0 0}.person-results{max-height:45vh;overflow:auto;margin:12px 0}.person-option{display:block;width:100%;padding:12px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;color:var(--ink)}.person-option:hover,.person-option:focus{background:var(--soft)}.map-view{height:300px;position:relative;overflow:hidden;background:#e3e9e5;touch-action:none;cursor:crosshair;border:1px solid var(--line);border-radius:10px}.map-marker{position:absolute;transform:translate(-50%,-50%);font-size:30px;line-height:1;color:#bd2339;text-shadow:0 0 3px white;pointer-events:none}.map-controls{display:flex;gap:8px;margin-bottom:10px}.selected-answer{margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere}
     .admin-card{margin:18px 0}.admin-field{display:block;margin:14px 0}.admin-field>span{display:block;font-size:14px;font-weight:600;margin-bottom:6px}.admin-field input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}.admin-section{border-top:1px solid var(--line);margin-top:20px;padding-top:12px}.admin-actions{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.admin-summary{cursor:pointer;font-weight:650;font-size:18px;overflow-wrap:anywhere}.admin-rules{margin:20px 0}.admin-toolbar{position:sticky;top:0;z-index:5;background:#f3f6f4;padding:12px 0;display:flex;gap:8px;flex-wrap:wrap}.admin-entry{display:flex;justify-content:flex-end;margin-bottom:12px}
     :root{--ink:#16213a;--muted:#708099;--line:#e3e9f3;--accent:#5259db;--soft:#eef0ff}body{background:#f5f7fc;background-image:radial-gradient(ellipse at 0 0,#e8edff 0,transparent 50%)}.shell{max-width:960px;padding-top:28px}.brand{color:#6874a0;letter-spacing:.09em}.hero{padding:20px 4px 10px}.card{box-shadow:0 8px 32px #25345b06;border-radius:22px}.primary{background:linear-gradient(125deg,#6663eb,#4655ce);box-shadow:0 4px 12px #5259db25}.primary:hover{background:#4147c2}.secondary{background:#edf0fb;color:#414e80}.field{background:#fbfcff;border-color:#dbe2ef}.field:focus{border-color:var(--accent);box-shadow:0 0 0 4px #5259db12}.choice:has(input:checked){background:#f0f1ff;border-color:#8a90e5}.progress-track{height:7px;background:#e4e8f5}.progress-bar{background:linear-gradient(90deg,#7c74ee,#5264d9)}.status-pill{display:inline-block;border-radius:100px;padding:5px 10px;font-size:12px;background:#f0f2f7;color:#69748a}.status-pill.live{background:#e4f5ef;color:#27785e}.catalog-heading,.workspace-heading{display:flex;gap:18px;align-items:center;justify-content:space-between;margin:24px 0}.catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin:24px 0}.form-tile{padding:25px;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 6px 24px #25345b05}.form-tile h2{margin:20px 0 10px;font-size:22px;overflow-wrap:anywhere}.form-tile .button{display:block;width:100%;margin-top:10px}.editor-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:24px 0}.editor-tabs button{border:0;background:none;padding:14px 20px;color:var(--muted);font-weight:650;border-bottom:3px solid transparent}.editor-tabs button[aria-selected=true]{color:var(--accent);border-color:var(--accent)}.admin-toolbar{background:#f5f7fc}.admin-summary{list-style:none;display:flex;align-items:center;gap:16px}.admin-summary:before{content:'✦';display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--soft);color:var(--accent);flex-shrink:0}.admin-summary:after{content:'⌄';margin-left:auto;color:var(--muted)}.admin-card[open]>.admin-summary{padding-bottom:18px;border-bottom:1px solid var(--line)}.source-box{padding:18px;background:#f4f6ff;border:1px solid #dde1ff;border-radius:14px;margin:16px 0}.admin-signout{float:right}.workspace-heading{flex-wrap:wrap}.workspace-heading h2{flex:1;min-width:160px}.question-label{font-size:17px}.question{margin-bottom:32px}@media(max-width:560px){.shell{padding:20px 14px}.catalog-heading{align-items:flex-start;flex-direction:column}.editor-tabs button{padding:12px}.admin-toolbar .button{flex:1}.workspace-heading{gap:10px}.form-tile{padding:20px}}
+    .map-dialog{width:min(1100px,98vw);max-height:96dvh;padding:22px}.map-dialog .map-view{height:min(60dvh,620px);min-height:300px;cursor:grab}.map-picker-actions{position:sticky;bottom:0;background:white;padding:10px 0;z-index:3;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}.map-coordinate-fields{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:10px;align-items:center}.map-coordinate-fields .question-label{margin:0;font-size:14px}.map-dialog .map-marker{z-index:2;pointer-events:none}.map-dialog .map-view img{user-select:none}@media(max-width:560px){.map-dialog{padding:14px;width:98vw}.map-dialog .map-view{height:52dvh}.map-coordinate-fields{grid-template-columns:auto 1fr}}
   </style>
 </head>
 <body>
@@ -127,7 +128,9 @@
       }
       return '';
     }
-    global.OprosUI = {isEmpty:isEmpty, matches:matches, visibleQuestions:visibleQuestions, validateQuestion:validateQuestion};
+    function mapProject(point,zoom){var size=256*Math.pow(2,zoom),latitude=Math.max(-85.05112878,Math.min(85.05112878,point.lat))*Math.PI/180;return {x:(point.lng+180)/360*size,y:(1-Math.log(Math.tan(latitude)+1/Math.cos(latitude))/Math.PI)/2*size};}
+    function mapUnproject(x,y,zoom){var size=256*Math.pow(2,zoom);return {lat:Math.max(-85.05112878,Math.min(85.05112878,Math.atan(Math.sinh(Math.PI*(1-2*y/size)))*180/Math.PI)),lng:((x/size*360)%360+360)%360-180};}
+    global.OprosUI = {mapProject:mapProject,mapUnproject:mapUnproject,isEmpty:isEmpty, matches:matches, visibleQuestions:visibleQuestions, validateQuestion:validateQuestion};
     if (typeof document === 'undefined') return;
     var schema, answers = {}, errors = {}, email = '', emailError = '', step = 0, sending = false, submissionId = newId(), storageKey = '', draftEnabled = false;
     var $ = function(id) { return document.getElementById(id); };
@@ -186,34 +189,90 @@
       }
       search.addEventListener('input',show);show();search.focus();box.dialog.addEventListener('close',function(){if(document.contains(trigger))trigger.focus();});
     }
-    function mapPicker(q, trigger) {
-      var box=dialogBox('Отметьте место на карте'), selected=answers[q.id], center=selected?{lat:selected.lat,lng:selected.lng}:{lat:55.751244,lng:37.618423}, zoom=10, pointer=null;
+    var yandexLoader=null,yandexLoadedKey='';
+    function loadYandex(key){
+      if(global.ymaps&&global.ymaps.Map)return Promise.resolve(global.ymaps);
+      if(yandexLoader&&key===yandexLoadedKey)return yandexLoader;
+      yandexLoadedKey=key;
+      yandexLoader=new Promise(function(resolve,reject){
+        var script=document.createElement('script'),timer=setTimeout(fail,18000);
+        function fail(){clearTimeout(timer);script.remove();yandexLoader=null;reject(new Error('Яндекс Карты не загрузились. Проверьте ключ, разрешённые домены и подключение.'));}
+        script.src='https://api-maps.yandex.ru/2.1/?apikey='+encodeURIComponent(key)+'&lang=ru_RU';script.async=true;script.onerror=fail;
+        script.onload=function(){if(!global.ymaps){fail();return;}global.ymaps.ready(function(){clearTimeout(timer);resolve(global.ymaps);});};document.head.appendChild(script);
+      });return yandexLoader;
+    }
+    function mapPicker(q,trigger){
+      if(schema.mapProvider!=='yandex'||!schema.yandexMapsKey){basicMapPicker(q,trigger);return;}
+      var box=dialogBox('Выберите место'),map=null,placemark=null,selected=answers[q.id],closed=false;
+      box.dialog.classList.add('map-dialog');box.body.appendChild(node('p','question-help','Найдите адрес, нажмите на карту или перетащите метку. Затем подтвердите выбор.'));
+      var viewport=node('div','map-view yandex-view');viewport.id='map-view';box.body.appendChild(viewport);
+      var status=node('p','question-help','Загружаем Яндекс Карты…');status.setAttribute('role','status');box.body.appendChild(status);
+      var coordinateFields=node('div','map-coordinate-fields');box.body.appendChild(coordinateFields);
+      var lat=node('input','field'),lng=node('input','field');lat.id='map-lat';lng.id='map-lng';lat.type=lng.type='number';lat.step=lng.step='any';lat.min=-90;lat.max=90;lng.min=-180;lng.max=180;
+      [['Широта',lat],['Долгота',lng]].forEach(function(pair){var label=node('label','question-label',pair[0]);label.htmlFor=pair[1].id;coordinateFields.appendChild(label);coordinateFields.appendChild(pair[1]);});
+      function values(){return {lat:Number(lat.value),lng:Number(lng.value)};}
+      function valid(){return lat.value.trim()&&lng.value.trim()&&!validateQuestion(q,values());}
+      function choose(coords,pan){
+        var point={lat:Number(coords[0]),lng:Number(coords[1])};if(validateQuestion(q,point))return;
+        selected=point;lat.value=point.lat.toFixed(6);lng.value=point.lng.toFixed(6);status.textContent='Точка выбрана. Можно перетащить метку для уточнения.';
+        if(!map)return;
+        if(!placemark){placemark=new global.ymaps.Placemark(coords,{}, {draggable:true,preset:'islands#violetDotIcon'});map.geoObjects.add(placemark);placemark.events.add('dragend',function(){choose(placemark.geometry.getCoordinates(),false);});}
+        else placemark.geometry.setCoordinates(coords);
+        if(pan)map.setCenter(coords,Math.max(map.getZoom(),15),{duration:250});
+      }
+      [lat,lng].forEach(function(input){input.addEventListener('change',function(){if(valid())choose([values().lat,values().lng],true);});});
+      var actions=node('div','map-picker-actions');box.body.appendChild(actions);
+      var center=node('button','button secondary','Отметить центр карты');center.type='button';center.disabled=true;center.addEventListener('click',function(){choose(map.getCenter(),false);});actions.appendChild(center);
+      var fallback=node('button','text-button','Открыть простую карту');fallback.type='button';fallback.addEventListener('click',function(){box.dialog.close();box.dialog.remove();basicMapPicker(q,trigger);});actions.appendChild(fallback);
+      var confirm=node('button','button primary','Использовать точку');confirm.id='map-confirm';confirm.type='button';actions.appendChild(confirm);confirm.addEventListener('click',function(){if(!valid()){status.textContent='Выберите точку или укажите корректные координаты.';return;}changeAnswer(q.id,values());box.dialog.close();render();$('field-'+q.id).focus();});
+      if(selected){lat.value=selected.lat;lng.value=selected.lng;}
+      loadYandex(schema.yandexMapsKey).then(function(api){
+        if(closed)return;map=new api.Map(viewport,{center:selected?[selected.lat,selected.lng]:[55.751244,37.618423],zoom:selected?16:10,controls:['zoomControl','searchControl','geolocationControl','fullscreenControl','typeSelector']},{searchControlProvider:'yandex#map'});
+        center.disabled=false;status.textContent='Поиск адреса — в верхней части карты. Нажмите на нужное место, чтобы поставить метку.';
+        map.events.add('click',function(event){choose(event.get('coords'),false);});
+        var search=map.controls.get('searchControl');search.events.add('resultselect',function(event){search.getResult(event.get('index')).then(function(result){if(!closed)choose(result.geometry.getCoordinates(),true);}).catch(function(){if(!closed)status.textContent='Адрес не найден. Повторите поиск или выберите точку на карте.';});});
+        if(selected)choose([selected.lat,selected.lng],false);
+        viewport.addEventListener('keydown',function(event){if(event.key==='Enter'&&event.target===viewport){event.preventDefault();choose(map.getCenter(),false);}});viewport.tabIndex=0;
+      }).catch(function(error){if(!closed)status.textContent=error.message+' Можно открыть простую карту или ввести координаты вручную.';});
+      box.dialog.addEventListener('close',function(){closed=true;if(map)map.destroy();if(document.contains(trigger))trigger.focus();});
+    }
+
+    function basicMapPicker(q, trigger) {
+      var box=dialogBox('Отметьте место на карте'), selected=answers[q.id], center=selected?{lat:selected.lat,lng:selected.lng}:{lat:55.751244,lng:37.618423}, zoom=selected?16:10, pointer=null, tileCache={}, points=new Map(), gesture=null, frame=0, moved=false;
+      box.dialog.classList.add('map-dialog');
       box.body.appendChild(node('p','question-help','Нажмите на карту для отметки. Перетаскивайте для перемещения, используйте + и − для масштаба. Стрелки перемещают карту, Enter отмечает её центр. Можно ввести координаты вручную.'));
       var controls=node('div','map-controls');box.body.appendChild(controls);
       var viewport=node('div','map-view');viewport.id='map-view';viewport.tabIndex=0;viewport.setAttribute('role','application');viewport.setAttribute('aria-label','Карта: стрелки для перемещения, Enter для выбора центра');box.body.appendChild(viewport);
       var credit=node('a','question-help','© OpenStreetMap contributors');credit.href='https://www.openstreetmap.org/copyright';credit.target='_blank';credit.rel='noopener noreferrer';box.body.appendChild(credit);
       var hint=node('p','question-help','Подложка загружается с OpenStreetMap. Если она недоступна, введите координаты ниже.');box.body.appendChild(hint);
       var lat=node('input','field'),lng=node('input','field');lat.id='map-lat';lng.id='map-lng';lat.type=lng.type='number';lat.step=lng.step='any';lat.min=-90;lat.max=90;lng.min=-180;lng.max=180;
-      [['Широта',lat],['Долгота',lng]].forEach(function(pair){var label=node('label','question-label',pair[0]);label.htmlFor=pair[1].id;box.body.appendChild(label);box.body.appendChild(pair[1]);});
+      var coordinateFields=node('div','map-coordinate-fields');box.body.appendChild(coordinateFields);
+      [['Широта',lat],['Долгота',lng]].forEach(function(pair){var label=node('label','question-label',pair[0]);label.htmlFor=pair[1].id;coordinateFields.appendChild(label);coordinateFields.appendChild(pair[1]);});
       var error=node('p','error');error.setAttribute('role','alert');box.body.appendChild(error);
       var confirm=node('button','button primary','Использовать точку');confirm.id='map-confirm';confirm.type='button';box.body.appendChild(confirm);
-      function project(point){var size=256*Math.pow(2,zoom),latitude=Math.max(-85.05112878,Math.min(85.05112878,point.lat))*Math.PI/180;return {x:(point.lng+180)/360*size,y:(1-Math.log(Math.tan(latitude)+1/Math.cos(latitude))/Math.PI)/2*size};}
-      function unproject(x,y){var size=256*Math.pow(2,zoom);return {lat:Math.max(-85.05112878,Math.min(85.05112878,Math.atan(Math.sinh(Math.PI*(1-2*y/size)))*180/Math.PI)),lng:((x/size*360+180)%360+360)%360-180};}
+      function project(point){return mapProject(point,zoom);}
+      function unproject(x,y){return mapUnproject(x,y,zoom);}
       function choose(point){selected={lat:Number(point.lat.toFixed(6)),lng:Number(point.lng.toFixed(6))};lat.value=selected.lat;lng.value=selected.lng;error.textContent='';draw();}
       function draw(){
-        viewport.replaceChildren();var width=viewport.clientWidth,height=viewport.clientHeight,p=project(center),count=Math.pow(2,zoom),left=p.x-width/2,top=p.y-height/2;
+        var used={};Array.prototype.forEach.call(viewport.querySelectorAll('.map-marker'),function(el){el.remove();});var width=viewport.clientWidth,height=viewport.clientHeight,p=project(center),count=Math.pow(2,zoom),left=p.x-width/2,top=p.y-height/2;
         for(var x=Math.floor(left/256);x<=Math.floor((left+width)/256);x++)for(var y=Math.floor(top/256);y<=Math.floor((top+height)/256);y++){
-          if(y<0||y>=count)continue;var tile=node('img');tile.alt='';tile.draggable=false;tile.referrerPolicy='strict-origin-when-cross-origin';tile.src='https://tile.openstreetmap.org/'+zoom+'/'+((x%count+count)%count)+'/'+y+'.png';tile.style.cssText='position:absolute;width:256px;height:256px;left:'+(x*256-left)+'px;top:'+(y*256-top)+'px;pointer-events:none';tile.addEventListener('error',function(){hint.textContent='Не удалось загрузить карту. Проверьте подключение или введите координаты вручную.';});viewport.appendChild(tile);
+          if(y<0||y>=count)continue;var tileKey=zoom+':'+x+':'+y;used[tileKey]=true;var tile=tileCache[tileKey];if(!tile){tile=node('img');tileCache[tileKey]=tile;tile.alt='';tile.draggable=false;tile.referrerPolicy='strict-origin-when-cross-origin';tile.src='https://tile.openstreetmap.org/'+zoom+'/'+((x%count+count)%count)+'/'+y+'.png';viewport.appendChild(tile);}tile.style.cssText='position:absolute;width:256px;height:256px;left:'+(x*256-left)+'px;top:'+(y*256-top)+'px;pointer-events:none';tile.onerror=function(){hint.textContent='Не удалось загрузить карту. Проверьте подключение или введите координаты вручную.';};
         }
+        Object.keys(tileCache).forEach(function(key){if(!used[key]){tileCache[key].remove();delete tileCache[key];}});
         if(selected){var position=project(selected),marker=node('span','map-marker','●');marker.style.left=(position.x-left)+'px';marker.style.top=(position.y-top)+'px';marker.setAttribute('aria-label','Выбранная точка');viewport.appendChild(marker);}
       }
       [-1,1].forEach(function(delta){var button=node('button','button secondary',delta>0?'+':'−');button.type='button';button.setAttribute('aria-label',delta>0?'Приблизить':'Отдалить');button.addEventListener('click',function(){zoom=Math.max(1,Math.min(18,zoom+delta));draw();});controls.appendChild(button);});
-      viewport.addEventListener('pointerdown',function(e){if(e.button!==0)return;pointer={x:e.clientX,y:e.clientY,center:project(center)};viewport.setPointerCapture(e.pointerId);});
-      viewport.addEventListener('pointerup',function(e){if(!pointer)return;var dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>6){center=unproject(pointer.center.x-dx,pointer.center.y-dy);draw();}else{var rect=viewport.getBoundingClientRect(),p=project(center);choose(unproject(p.x+e.clientX-rect.left-rect.width/2,p.y+e.clientY-rect.top-rect.height/2));}pointer=null;});
-      viewport.addEventListener('pointercancel',function(){pointer=null;});
+      function schedule(){if(!frame)frame=requestAnimationFrame(function(){frame=0;draw();});}
+      function zoomAt(delta,x,y){var before=project(center),rect=viewport.getBoundingClientRect(),dx=x-rect.left-rect.width/2,dy=y-rect.top-rect.height/2,anchor=unproject(before.x+dx,before.y+dy);zoom=Math.max(1,Math.min(18,zoom+delta));var after=project(anchor);center=unproject(after.x-dx,after.y-dy);draw();}
+      viewport.addEventListener('wheel',function(e){e.preventDefault();zoomAt(e.deltaY<0?1:-1,e.clientX,e.clientY);},{passive:false});
+      viewport.addEventListener('dblclick',function(e){e.preventDefault();zoomAt(1,e.clientX,e.clientY);});
+      viewport.addEventListener('pointerdown',function(e){if(e.pointerType==='mouse'&&e.button!==0)return;points.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;pointer={x:e.clientX,y:e.clientY,center:project(center)};viewport.style.cursor='grabbing';if(e.isTrusted)viewport.setPointerCapture(e.pointerId);if(points.size===2){var pair=Array.from(points.values());gesture={distance:Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y)};moved=true;}});
+      viewport.addEventListener('pointermove',function(e){if(!points.has(e.pointerId))return;points.set(e.pointerId,{x:e.clientX,y:e.clientY});if(points.size===2&&gesture){var pair=Array.from(points.values()),distance=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);if(distance>gesture.distance*1.35||distance<gesture.distance/1.35){zoomAt(distance>gesture.distance?1:-1,(pair[0].x+pair[1].x)/2,(pair[0].y+pair[1].y)/2);gesture.distance=distance;}return;}if(!pointer||gesture)return;var dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.abs(dx)+Math.abs(dy)>5)moved=true;if(moved){center=unproject(pointer.center.x-dx,pointer.center.y-dy);schedule();}});
+      viewport.addEventListener('pointerup',function(e){if(!points.has(e.pointerId))return;points.delete(e.pointerId);if(!moved&&!gesture&&pointer){var rect=viewport.getBoundingClientRect(),p=project(center);choose(unproject(p.x+e.clientX-rect.left-rect.width/2,p.y+e.clientY-rect.top-rect.height/2));}pointer=null;if(!points.size){gesture=null;viewport.style.cursor='grab';}});
+      viewport.addEventListener('pointercancel',function(){points.clear();pointer=null;gesture=null;viewport.style.cursor='grab';});
       viewport.addEventListener('keydown',function(e){var p=project(center),offset={ArrowLeft:[-100,0],ArrowRight:[100,0],ArrowUp:[0,-100],ArrowDown:[0,100]}[e.key];if(offset){e.preventDefault();center=unproject(p.x+offset[0],p.y+offset[1]);draw();}if(e.key==='Enter'){e.preventDefault();choose(center);}});
       confirm.addEventListener('click',function(){var point={lat:Number(lat.value),lng:Number(lng.value)};if(!lat.value.trim()||!lng.value.trim()||validateQuestion(q,point)){error.textContent='Укажите широту от −90 до 90 и долготу от −180 до 180.';return;}changeAnswer(q.id,point);box.dialog.close();render();$('field-'+q.id).focus();});
-      if(selected){lat.value=selected.lat;lng.value=selected.lng;}draw();box.dialog.addEventListener('close',function(){if(document.contains(trigger))trigger.focus();});
+      if(selected){lat.value=selected.lat;lng.value=selected.lng;}draw();box.dialog.addEventListener('close',function(){if(frame)cancelAnimationFrame(frame);if(document.contains(trigger))trigger.focus();});
     }
 
     function questionElement(q) {
@@ -343,8 +402,8 @@
     function adminRender(){
       var area=$('admin-fields');area.replaceChildren();
       var general=node('div','card admin-card');general.dataset.editorView='settings';general.appendChild(node('h2',null,'Настройки формы'));area.appendChild(general);
-      function setting(key,label,kind,fallback){var row=adminDraft.settings.find(function(r){return r.key===key;});if(!row){row={key:key,value:fallback===undefined?'':fallback,description:''};adminDraft.settings.push(row);}adminField(general,label,row.value,function(value){row.value=value;},kind);}
-      setting('form_title','Название');setting('form_description','Описание','textarea');setting('confirmation_message','Сообщение после отправки','textarea');setting('submit_label','Текст кнопки отправки');setting('accept_responses','Принимать ответы','checkbox',true);setting('collect_email','Собирать email','checkbox',false);setting('email_required','Email обязателен','checkbox',false);setting('max_responses','Лимит ответов (0 — без ограничения)','number',0);setting('closed_message','Сообщение закрытой формы');setting('fio_range','Диапазон ФИО',null,'People!A2:A');
+      function setting(key,label,kind,fallback,choices){var row=adminDraft.settings.find(function(r){return r.key===key;});if(!row){row={key:key,value:fallback===undefined?'':fallback,description:''};adminDraft.settings.push(row);}adminField(general,label,row.value,function(value){row.value=value;},kind,choices);}
+      setting('form_title','Название');setting('form_description','Описание','textarea');setting('confirmation_message','Сообщение после отправки','textarea');setting('submit_label','Текст кнопки отправки');setting('accept_responses','Принимать ответы','checkbox',true);setting('collect_email','Собирать email','checkbox',false);setting('email_required','Email обязателен','checkbox',false);setting('max_responses','Лимит ответов (0 — без ограничения)','number',0);setting('closed_message','Сообщение закрытой формы');setting('fio_range','Диапазон ФИО',null,'People!A2:A');setting('map_provider','Карта для отметки координат','select','osm',[{value:'osm',label:'OpenStreetMap — без ключа'},{value:'yandex',label:'Яндекс Карты — с API-ключом'}]);setting('yandex_maps_key','Браузерный API-ключ Яндекс Карт');general.appendChild(node('p','question-help','Для Яндекс Карт нужен ключ API JavaScript 2.1. Укажите его здесь и разрешите домен развёрнутого приложения в кабинете Яндекса. Без ключа используется простая карта. Ключ браузерный: не вставляйте сюда пароль или ключ серверного сервиса.'));
       general.appendChild(node('p','question-help','ФИО всегда обязательно и показывается первым. Список берётся из указанного диапазона. ФИО и ответы участников этот редактор не изменяет.'));
       var sections=node('div','card admin-card');sections.dataset.editorView='sections';sections.appendChild(node('h2',null,'Разделы'));area.appendChild(sections);
       adminDraft.sections.slice().sort(function(a,b){return Number(a.position)-Number(b.position);}).forEach(function(section){

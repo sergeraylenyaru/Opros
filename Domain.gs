@@ -53,6 +53,8 @@ var OprosDomain = (function () {
       emailRequired: bool(settings.email_required, false),
       submitLabel: string(settings.submit_label || 'Отправить ответ'),
       maxResponses: Number(settings.max_responses || 0),
+      mapProvider: settings.map_provider === 'yandex' ? 'yandex' : 'osm',
+      yandexMapsKey: settings.map_provider === 'yandex' ? string(settings.yandex_maps_key).trim() : '',
       sections: []
     };
     if (!Number.isInteger(schema.maxResponses) || schema.maxResponses < 0) fail('max_responses должен быть целым числом от 0.');
