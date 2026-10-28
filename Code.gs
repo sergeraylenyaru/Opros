@@ -92,3 +92,35 @@ function setupAdmin() {
 function setupNotice_(message) {
   if (typeof Logger !== 'undefined') Logger.log(message);
 }
+
+/** Keyless geocoding. Cache + global throttle respect the public Nominatim service. */
+function lookupMapAddress(formId, query) {
+  if (!query || typeof query !== 'object') throw new Error('Некорректный запрос адреса.');
+  var config = OprosForms.load(OprosStore.workbook(), OprosForms.id(formId));
+  if (!config.questions.some(function(q){return q.type==='map' && q.enabled!==false && !/^(false|0|no)$/i.test(String(q.enabled));})) throw new Error('В этой форме нет вопроса с картой.');
+  var parameters, mode;
+  if (query.text != null) {
+    var text=String(query.text).trim();if(text.length<3||text.length>300)throw new Error('Введите адрес от 3 до 300 символов.');
+    parameters='search?format=jsonv2&limit=5&q='+encodeURIComponent(text);mode='search';
+  } else {
+    if(typeof query.lat!=='number'||typeof query.lng!=='number'||!isFinite(query.lat)||!isFinite(query.lng)||Math.abs(query.lat)>90||Math.abs(query.lng)>180)throw new Error('Некорректные координаты.');
+    parameters='reverse?format=jsonv2&lat='+query.lat.toFixed(6)+'&lon='+query.lng.toFixed(6);mode='reverse';
+  }
+  var cache=CacheService.getScriptCache(),key='geocode:'+OprosAdmin.hash(parameters),cached=cache.get(key);
+  if(cached)return JSON.parse(cached);
+  var lock=LockService.getScriptLock(),geoLocked=false;if(!lock.tryLock(1000))throw new Error('Поиск занят. Повторите через секунду.');geoLocked=true;
+  try {
+    cached=cache.get(key);if(cached)return JSON.parse(cached);
+    var geoProperties=PropertiesService.getScriptProperties();
+    if(Date.now()-Number(geoProperties.getProperty('GEOCODER_LAST_REQUEST_AT')||0)<1100)throw new Error('Повторите поиск через секунду.');
+    geoProperties.setProperty('GEOCODER_LAST_REQUEST_AT',String(Date.now()));
+    lock.releaseLock();geoLocked=false;
+    var response=UrlFetchApp.fetch('https://nominatim.openstreetmap.org/'+parameters+'&accept-language=ru',{headers:{'User-Agent':'Opros-AppsScript/1.0 (+https://github.com/sergeraylenyaru/Opros)','Accept':'application/json'},muteHttpExceptions:true});
+    if(response.getResponseCode()!==200)throw new Error('Адресный сервис временно недоступен. Можно сохранить координаты без адреса.');
+    var raw;try{raw=JSON.parse(response.getContentText());}catch(error){throw new Error('Адресный сервис вернул непонятный ответ. Повторите позже.');}
+    var rows=mode==='search'?raw:(raw.error?[]:[raw]);
+    if(!Array.isArray(rows))throw new Error('Не удалось прочитать результат поиска.');
+    var results=rows.slice(0,5).filter(function(row){return row&&isFinite(Number(row.lat))&&isFinite(Number(row.lon))&&Math.abs(Number(row.lat))<=90&&Math.abs(Number(row.lon))<=180;}).map(function(row){return {lat:Number(row.lat),lng:Number(row.lon),address:String(row.display_name||'').slice(0,1000)};});
+    cache.put(key,JSON.stringify(results),3600);return results;
+  } finally {if(geoLocked)lock.releaseLock();}
+}

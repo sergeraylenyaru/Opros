@@ -228,3 +228,4 @@ test('map coordinates must be finite numbers within geographic bounds',()=>{
  for(const value of ['',{},'55,37',{lat:'55',lng:37},{lat:NaN,lng:0},{lat:0,lng:Infinity},{lat:-91,lng:0},{lat:0,lng:181}])assert.throws(()=>domain.validateSubmission(form,payload({location:value})));
  assert.equal(domain.validateSubmission(form,payload({location:{lat:0,lng:0}})).answers.location.lat,0);
 });
+test('map may include a trimmed approximate address; arbitrary fields excluded and oversized addresses rejected',()=>{const form=schema([question('place','map',{required:true})]);const result=domain.validateSubmission(form,payload({place:{lat:55,lng:37,address:'  Москва  ',unknown:'ignored'}})).answers.place;assert.deepEqual(normalize(result),{lat:55,lng:37,address:'Москва'});for(const address of [{},123,'x'.repeat(1001)])assert.throws(()=>domain.validateSubmission(form,payload({place:{lat:55,lng:37,address}})));});

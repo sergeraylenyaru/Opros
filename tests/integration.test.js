@@ -45,9 +45,9 @@ test('FIO is always required and first, source range follows settings, invalid n
 test('initialization creates empty People without invented names and preserves existing answers',()=>{
  const r=runtime();delete r.sheets.People;r.context.setupForm();assert.equal(r.sheets.People.data.length,1);assert.equal(r.context.getFormSchema().sections[0].questions[0].options.length,0);
 });
-test('map point persisted as JSON and rejected before writing when malformed',()=>{
+test('map point persisted as readable coordinates and rejected before writing when malformed',()=>{
  const r=runtime(),c=r.context;c.setupForm();const headers=r.sheets.Questions.data[0];const q={id:'place',section_id:'details',title:'Место',type:'map',required:true,enabled:true,position:99};r.sheets.Questions.data.push(headers.map(key=>q[key]??''));
- const p=payload();p.answers.place={lat:55,lng:37};c.submitResponse(p);const h=r.sheets.Responses.data[0];assert.deepEqual(JSON.parse(r.sheets.Responses.data[1][h.indexOf('q:place')]),{lat:55,lng:37});
+ const p=payload();p.answers.place={lat:55,lng:37};c.submitResponse(p);const h=r.sheets.Responses.data[0];assert.equal(r.sheets.Responses.data[1][h.indexOf('q:place')],'55, 37');
  p.submissionId='submission_invalid_map';p.answers.place={lat:91,lng:37};assert.throws(()=>c.submitResponse(p));assert.equal(r.sheets.Responses.getLastRow(),2);
 });
 test('upgrade adds fio_range to existing settings without overwriting customized rows',()=>{
@@ -61,3 +61,4 @@ test('bootstrap binds workbook even if existing question conditions are broken a
 test('startApp prepares an empty workbook and admin once without rotating existing credentials',()=>{
  const r=runtime(),c=r.context;c.startApp();assert.equal(r.properties.SPREADSHEET_ID,r.book.getId());assert.ok(r.properties.ADMIN_PASSWORD_HASH);const hash=r.properties.ADMIN_PASSWORD_HASH;c.startApp();assert.equal(r.properties.ADMIN_PASSWORD_HASH,hash);
 });
+test('map coordinates saved as plain pair and address stored separately, preserving historic rows',()=>{const r=runtime(),c=r.context;c.setupForm();const h=r.sheets.Questions.data[0],q={id:'place',section_id:'details',title:'Место',type:'map',required:true,enabled:true,position:99};r.sheets.Questions.data.push(h.map(k=>q[k]??''));r.sheets.Responses.data[0].push('q:place');const old=r.sheets.Responses.data[0].map(()=> '');old[0]='historic_submission';old[old.length-1]='{"lat":1,"lng":2}';r.sheets.Responses.data.push(old);const p=payload();p.answers.place={lat:55.804668,lng:38.983412,address:'Примерный адрес'};c.submitResponse(p);const headers=r.sheets.Responses.data[0];assert.equal(r.sheets.Responses.data[2][headers.indexOf('q:place')],'55.804668, 38.983412');assert.equal(r.sheets.Responses.data[2][headers.indexOf('q:place:address')],'Примерный адрес');assert.equal(r.sheets.Responses.data[1].at(-1),'{"lat":1,"lng":2}');});

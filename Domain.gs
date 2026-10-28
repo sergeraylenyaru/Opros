@@ -168,7 +168,10 @@ var OprosDomain = (function () {
         if (typeof value !== 'boolean') fail('Ожидается отметка: ' + q.title);
       } else if (q.type === 'map') {
         if (!object(value) || typeof value.lat !== 'number' || typeof value.lng !== 'number' || !isFinite(value.lat) || !isFinite(value.lng) || Math.abs(value.lat) > 90 || Math.abs(value.lng) > 180) fail('Выберите корректную точку на карте: ' + q.title);
+        var address = value.address;
+        if (address != null && (typeof address !== 'string' || address.length > 1000)) fail('Некорректный адрес точки: ' + q.title);
         value = { lat: value.lat, lng: value.lng };
+        if (typeof address === 'string' && address.trim()) value.address = address.trim();
       } else if (q.type === 'number' || q.type === 'scale') {
         if ((typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && !value.trim())) fail('Ожидается число: ' + q.title);
         value = Number(value);

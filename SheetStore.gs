@@ -158,7 +158,7 @@ var OprosStore = (function () {
   function append(sheet, schemaValue, submission) {
     var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     var columns = headers.slice();
-    schemaValue.sections.forEach(function (s) { s.questions.forEach(function (q) { if (columns.indexOf('q:' + q.id) < 0) columns.push('q:' + q.id); }); });
+    schemaValue.sections.forEach(function (s) { s.questions.forEach(function (q) { if (columns.indexOf('q:' + q.id) < 0) columns.push('q:' + q.id); if (q.type === 'map' && columns.indexOf('q:' + q.id + ':address') < 0) columns.push('q:' + q.id + ':address'); }); });
     ensureCapacity(sheet, sheet.getLastRow() + 1, columns.length);
     if (columns.length !== headers.length) sheet.getRange(1, 1, 1, columns.length).setValues([columns]);
     var row = columns.map(function (key) {
@@ -166,7 +166,9 @@ var OprosStore = (function () {
       if (key === 'submitted_at') return new Date();
       if (key === 'respondent_email') return safeCell(submission.respondentEmail);
       var id = key.indexOf('q:') === 0 ? key.slice(2) : '';
+      if (/:address$/.test(id)) { var point = submission.answers[id.slice(0, -8)]; return point && point.address ? safeCell(point.address) : ''; }
       var value = Object.prototype.hasOwnProperty.call(submission.answers, id) ? submission.answers[id] : '';
+      if (value && typeof value === 'object' && !Array.isArray(value) && typeof value.lat === 'number' && typeof value.lng === 'number') return safeCell(String(value.lat) + ', ' + String(value.lng));
       return safeCell(value !== null && typeof value === 'object' ? JSON.stringify(value) : value);
     });
     sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length).setValues([row]);
